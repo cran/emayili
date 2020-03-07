@@ -1,4 +1,4 @@
-bea34186f35a1ffe2c048c9e6817d535 *DESCRIPTION
+aa5b1e3ba9e1867d998dce39b361886b *DESCRIPTION
 6b3bd4af18c1a0f8878b0bf55abebff7 *NAMESPACE
 e672bea31b7f3742e02ecadeba8908d5 *R/address.R
 05d15f1ff33195b952df17b25d3df9c1 *R/attachment.R
@@ -8,7 +8,7 @@ bf9c592414cda25b418ade61208143f6 *R/encoding.R
 331b259427e15e92ebc5ae1f7e9e2c6d *R/envelope.R
 486caf435fdbb6684e41f881b463a951 *R/message.R
 ad8432bb6ba4fb79b5a92555c618fe84 *R/mime.R
-8bd46e7556bdfa762f9e41093d6daefb *R/server.R
+788de56c443e6d5147f051e04770a08c *R/server.R
 758c15272014b25856d90b1f53e5b911 *R/subject.R
 df6b4ef5048f4726484fd01695a9972a *README.md
 d9ee635f0ce8b4d7e755b818180d9d7d *inst/github-card.R
@@ -29,7 +29,7 @@ d4b7df5d74c2c3d0d9984f268626bc92 *man/mime.Rd
 831930336d21742b83c08685b2ce75af *man/qp_decode.Rd
 52c92a77d7c77ffb7d3dde4eec436b0c *man/qp_encode.Rd
 535b36b9b2755f6d9b26e322f0e2a50b *man/reply.Rd
-633f8163477586c0df1b34dd7d9e59b1 *man/server.Rd
+2d416cc5ed21503e8ceab0428368b06f *man/server.Rd
 e9373431c5ae0a6ad2d9016d4f141823 *man/subject.Rd
 f77208e7530a1be56c879f7f06437501 *man/text.Rd
 b4ab1972ef7a19f5f84f466f446f1262 *man/to.Rd
@@ -42,5 +42,5 @@ b90bb3954af20413edd91254277ebb9f *tests/testthat/test-attachment.R
 f47527314878a608bce0b70167413b86 *tests/testthat/test-encoding.R
 e732724fac0f582f8f479f3a1dffbd54 *tests/testthat/test-envelope.R
 4403a842d0bb24b92ec672572b09e746 *tests/testthat/test-message.R
-41c2ef332e886b52949874b5987f92d6 *tests/testthat/test-server.R
+75ce104ad3361fc425927c57a0fe8d47 *tests/testthat/test-server.R
 45d44e6e3666855e5a8629bb491098a5 *tests/testthat/test-subject.R
