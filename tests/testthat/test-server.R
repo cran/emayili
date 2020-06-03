@@ -1,5 +1,3 @@
-SMTP_USERNAME = Sys.getenv("SMTP_USERNAME")
-
 # Using fake SMTP server.
 #
 # - https://mailtrap.io/
@@ -22,8 +20,16 @@ msg <- envelope() %>%
   from(SMTP_USERNAME) %>%
   to(SMTP_USERNAME)
 
+msg_no_recipient <- envelope() %>%
+  from(SMTP_USERNAME)
+
 test_that("server type", {
   expect_type(smtp, "closure")
+})
+
+test_that("error if recipient missing", {
+  skip_on_cran()
+  expect_error(smtp(msg_no_recipient), "Must specify at least one email recipient.")
 })
 
 test_that("sends text message", {
@@ -59,7 +65,7 @@ test_that("sends message with text attachment", {
     attachment(TXTPATH)
 
   skip_on_cran()
-  expect_error(smtp(msg), NA)
+  expect_error(smtp(msg %>% subject("{emayili} test: Text attachment")), NA)
 })
 
 test_that("sends message with image attachment", {
@@ -67,7 +73,7 @@ test_that("sends message with image attachment", {
     attachment(PNGPATH)
 
   skip_on_cran()
-  expect_error(smtp(msg), NA)
+  expect_error(smtp(msg %>% subject("{emayili} test: Image attachment")), NA)
 })
 
 test_that("sends message with image attachment (using CID)", {
@@ -76,7 +82,7 @@ test_that("sends message with image attachment (using CID)", {
     attachment(PNGPATH, cid = "r-logo", type = "image/png")
 
   skip_on_cran()
-  expect_error(smtp(msg), NA)
+  expect_error(smtp(msg %>% subject("{emayili} test: Image attachment (using CID)")), NA)
 })
 
 test_that("sends with verbose output", {
@@ -84,5 +90,5 @@ test_that("sends with verbose output", {
   output <- capture.output(smtp(msg, verbose = TRUE), type = "message") %>%
     paste(collapse = "\n")
 
-  expect_match(output, "^Sending email to")
+  expect_match(output, "250 Message accepted", fixed = TRUE)
 })
