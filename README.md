@@ -53,6 +53,8 @@ library(magrittr)
 email <- envelope()
 ```
 
+### Creating a Message
+
 The message has class `envelope`.
 
 ``` r
@@ -91,6 +93,42 @@ Add an attachment.
 email <- email %>% attachment("image.jpg")
 ```
 
+You can also create the message in a single command:
+
+``` r
+email <- envelope(
+  to = "bob@google.com",
+  from = "alice@yahoo.com",
+  subject = "This is a plain text message!",
+  text = "Hello!"
+)
+```
+
+Simply printing a message displays the header information.
+
+``` r
+email
+```
+
+    Date:         Fri, 02 Oct 2020 14:17:38 GMT
+    From:         alice@yahoo.com
+    To:           bob@google.com
+    Cc:           craig@google.com
+    Subject:      This is a plain text message!
+    X-Mailer:     {emayili}-0.4.3
+
+You can identify emails which have been sent using `{emayili}` by the
+presence of an `X-Mailer` header which includes both the package name
+and version.
+
+If you want to see the complete MIME object, just convert to a string.
+
+``` r
+as.character(email)
+```
+
+### Sending a Message
+
 Create a SMTP server object and send the message.
 
 ``` r
@@ -100,23 +138,6 @@ smtp <- server(host = "smtp.gmail.com",
                password = "bd40ef6d4a9413de9c1318a65cbae5d7")
 smtp(email, verbose = TRUE)
 ```
-
-Simply printing a message displays the header information.
-
-``` r
-email
-```
-
-    Date:         Wed, 03 Jun 2020 14:04:34 GMT
-    From:         alice@yahoo.com
-    To:           bob@google.com
-    Cc:           craig@google.com
-    Subject:      This is a plain text message!
-    X-Mailer:     {emayili}-0.3.13
-
-You can identify emails which have been sent using `{emayili}` by the
-presence of an `X-Mailer` header which includes both the package name
-and version.
 
 To see the guts of the message as passed to the SMTP server:
 

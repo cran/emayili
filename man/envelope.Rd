@@ -4,7 +4,33 @@
 \alias{envelope}
 \title{Create a message.}
 \usage{
-envelope()
+envelope(
+  to = NULL,
+  from = NULL,
+  cc = NULL,
+  bcc = NULL,
+  reply = NULL,
+  subject = NULL,
+  text = NULL,
+  html = NULL
+)
+}
+\arguments{
+\item{to}{See \code{to()}}
+
+\item{from}{See \code{from()}}
+
+\item{cc}{See \code{cc()}}
+
+\item{bcc}{See \code{bcc()}}
+
+\item{reply}{See \code{reply()}}
+
+\item{subject}{See \code{subject()}}
+
+\item{text}{See \code{text()}}
+
+\item{html}{See \code{html()}}
 }
 \value{
 A message object.
@@ -15,6 +41,17 @@ Create a message.
 \examples{
 # Create an (empty) message object.
 msg <- envelope()
+
+# Create a complete message object.
+envelope(
+  to = "bob@gmail.com",
+  from = "craig@gmail.com",
+  cc = "alex@gmail.com",
+  bcc = "shannon@gmail.com",
+  reply = "craig@yahoo.com",
+  subject = "Hiya!",
+  text = "Hi Bob, how are you?"
+)
 }
 \seealso{
 \code{\link{subject}}, \code{\link{from}}, \code{\link{to}}, \code{\link{cc}}, \code{\link{bcc}} and \code{\link{reply}}
