@@ -12,13 +12,13 @@ status](https://travis-ci.org/datawookie/emayili.svg?branch=master)](https://tra
 [![Codecov test
 coverage](https://img.shields.io/codecov/c/github/datawookie/emayili.svg)](https://codecov.io/github/datawookie/emayili)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->
 
 emayili is a package for sending emails from R. The design goals are:
 
-  - works on all manner of SMTP servers and
-  - has minimal dependencies (or dependencies which are easily
+-   works on all manner of SMTP servers and
+-   has minimal dependencies (or dependencies which are easily
     satisfied).
 
 The package name is an adaption of the Zulu word for email, imeyili.
@@ -110,12 +110,12 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:         Fri, 02 Oct 2020 14:17:38 GMT
+    Date:         Sun, 28 Mar 2021 13:06:51 GMT
     From:         alice@yahoo.com
     To:           bob@google.com
     Cc:           craig@google.com
     Subject:      This is a plain text message!
-    X-Mailer:     {emayili}-0.4.3
+    X-Mailer:     {emayili}-0.4.7
 
 You can identify emails which have been sent using `{emayili}` by the
 presence of an `X-Mailer` header which includes both the package name
@@ -125,6 +125,54 @@ If you want to see the complete MIME object, just convert to a string.
 
 ``` r
 as.character(email)
+```
+
+### Adding an Inline Image
+
+Adding an inline image to an HTML message is possible. There are two
+ways to achieve this.
+
+*1. Base64 Encoding*
+
+First you’ll need to [Base64
+encode](https://en.wikipedia.org/wiki/Base64) the image.
+
+``` r
+img_base64 <- base64enc::base64encode("image.jpg")
+```
+
+Then create the HTML message body.
+
+``` r
+html_body <- sprintf('<html><body><img src="data:image/jpeg;base64,%s"></body></html>', img_base64)
+```
+
+And finally add it to the email.
+
+``` r
+email <- envelope() %>% html(html_body)
+```
+
+*Note:* It’s important that you specify the appropriate media type
+(`image/jpeg` for JPEG and `image/png` for PNG).
+
+*2. Using a CID*
+
+Unfortunately some mail clients (like Gmail) will not display Base64
+encoded images. In this case using a CID is a working alternative.
+
+First create the message body which references an image by CID.
+
+``` r
+html_body <- '<html><body><img src="cid:image"></body></html>'
+```
+
+Then attach the image and specify the `cid` argument.
+
+``` r
+email <- envelope() %>%
+  html(html_body) %>%
+  attachment(path = "image.jpg", cid = "image")
 ```
 
 ### Sending a Message
@@ -148,24 +196,33 @@ print(email, details = TRUE)
 ### Using STARTTLS
 
 If you’re trying to send email with a host that uses the STARTTLS
-security protocol (like Google Mail, Yahoo\! or AOL), then it will most
+security protocol (like Google Mail, Yahoo! or AOL), then it will most
 probably be blocked due to insufficient security. In order to circumvent
 this, you can grant access to less secure apps. See the links below for
 specifics:
 
-  - [Google](https://myaccount.google.com/security)
+-   [Google](https://myaccount.google.com/security)
     ([details](https://support.google.com/accounts/answer/6010255))
-  - [Yahoo\!](https://login.yahoo.com/account/security) and
-  - [AOL](https://login.aol.com/account/security).
+-   [Yahoo!](https://login.yahoo.com/account/security) and
+-   [AOL](https://login.aol.com/account/security).
+
+## Standards Documents
+
+The following (draft) standards documents relate to emails:
+
+-   [RFC 2822](https://tools.ietf.org/html/rfc2822)
+-   [RFC 5322](https://tools.ietf.org/html/rfc5322)
+-   [RFC 6854](https://tools.ietf.org/html/rfc6854) (an update to RFC
+    5322).
 
 ## Similar Packages
 
 There is a selection of other R packages which also send emails:
 
-  - [blastula](https://cran.r-project.org/package=blastula)
-  - [blatr](https://cran.r-project.org/package=blatr) (Windows)
-  - [gmailr](https://cran.r-project.org/package=gmailr)
-  - [mail](https://cran.r-project.org/package=mail)
-  - [mailR](https://cran.r-project.org/package=mailR)
-  - [sendmailR](https://cran.r-project.org/package=sendmailR)
-  - [ponyexpress](https://github.com/ropenscilabs/ponyexpress)
+-   [blastula](https://cran.r-project.org/package=blastula)
+-   [blatr](https://cran.r-project.org/package=blatr) (Windows)
+-   [gmailr](https://cran.r-project.org/package=gmailr)
+-   [mail](https://cran.r-project.org/package=mail)
+-   [mailR](https://cran.r-project.org/package=mailR)
+-   [sendmailR](https://cran.r-project.org/package=sendmailR)
+-   [ponyexpress](https://github.com/ropenscilabs/ponyexpress)
