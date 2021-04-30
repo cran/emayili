@@ -1,16 +1,16 @@
-09f0cd6b39921f99c3b743e02a6192bb *DESCRIPTION
-a80cc83b158294be6f8779cda8d9ef75 *NAMESPACE
+cc0d1db0969bc27cf952080eb5cf261a *DESCRIPTION
+9e0c97f85f40489cbc22c7162ee0f891 *NAMESPACE
 41e4f087288e142ba033618ed92739c3 *R/address.R
 66f2bbd2b2c61b75a64107ad6a9d7bd4 *R/attachment.R
 4da022ab9f3ba5a0d51f8733600b8c82 *R/body.R
-6bcf5ab2fde0959aa3c23a1bd44aef0a *R/emayili.R
+738dbbc70b288682088fbc23a5f83a00 *R/emayili.R
 bf9c592414cda25b418ade61208143f6 *R/encoding.R
 532bff551e4fed8c7150920e1b9600fd *R/envelope.R
 f76570cae0bf06fa6c7967b33a33fbcd *R/message.R
 7c9e0715e16cfad1d9165576fa048b4c *R/mime.R
-6b819d8db51ea39af6562d2f56d9451f *R/server.R
+b729b1822f02298052e4eeb67d973f88 *R/server.R
 758c15272014b25856d90b1f53e5b911 *R/subject.R
-f30b4db08b76c75086845ccb5fe63233 *README.md
+e1163479ea3b82c985805157cbc28966 *README.md
 d0a4e3d1b9e14560942b837b2e7bcd98 *inst/cats.jpg
 d9ee635f0ce8b4d7e755b818180d9d7d *inst/github-card.R
 a72f2a5e65628520af1909dce3da3b69 *inst/hex/emayili-hex.R
@@ -39,7 +39,7 @@ e9373431c5ae0a6ad2d9016d4f141823 *man/subject.Rd
 f77208e7530a1be56c879f7f06437501 *man/text.Rd
 b8d3144c7535cdd9caddcd3fff972066 *man/to.Rd
 c9ed8d1606cebfa7cfe2d11339e382ac *tests/testthat.R
-2bba790eb378205de6fbdf79beef0e42 *tests/testthat/setup-files.R
+55d26731fe5e3884f7854f5cf62e5762 *tests/testthat/setup-files.R
 b9c747e1a448a9463e8be923135026da *tests/testthat/teardown-files.R
 ee06183092a423fa2cd3a70b24747539 *tests/testthat/test-address.R
 b90bb3954af20413edd91254277ebb9f *tests/testthat/test-attachment.R
@@ -48,5 +48,5 @@ f47527314878a608bce0b70167413b86 *tests/testthat/test-encoding.R
 0bc7d27b4120c858e585558560d4ac21 *tests/testthat/test-envelope.R
 4403a842d0bb24b92ec672572b09e746 *tests/testthat/test-message.R
 f9ca3de9ec437e252a737d9b9087ed25 *tests/testthat/test-mime.R
-8fe56d983a45be50af13de0b5b9b0a14 *tests/testthat/test-server.R
+ec2a4f3d569a5a12e68cdad4c129dd64 *tests/testthat/test-server.R
 45d44e6e3666855e5a8629bb491098a5 *tests/testthat/test-subject.R
