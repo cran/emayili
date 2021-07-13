@@ -1,6 +1,6 @@
-2b5aea0c5dbfaecab0672b8512fb7004 *DESCRIPTION
+d690f6ab3c8cd82032206b69df91bf93 *DESCRIPTION
 3333fe7236da683a899baa64d0cb5533 *NAMESPACE
-c065b2d0155de96aefc9c3099d9ce07c *NEWS.md
+09abe88201f07bccc38e6eed8d2ce561 *NEWS.md
 41e4f087288e142ba033618ed92739c3 *R/address.R
 66f2bbd2b2c61b75a64107ad6a9d7bd4 *R/attachment.R
 4da022ab9f3ba5a0d51f8733600b8c82 *R/body.R
@@ -9,7 +9,7 @@ bf9c592414cda25b418ade61208143f6 *R/encoding.R
 532bff551e4fed8c7150920e1b9600fd *R/envelope.R
 f76570cae0bf06fa6c7967b33a33fbcd *R/message.R
 7c9e0715e16cfad1d9165576fa048b4c *R/mime.R
-aaf96b817bb4e2a75ffb83c3ecd17645 *R/server.R
+d8959b291f3a8fa6de7329e22fb35547 *R/server.R
 758c15272014b25856d90b1f53e5b911 *R/subject.R
 e1163479ea3b82c985805157cbc28966 *README.md
 d0a4e3d1b9e14560942b837b2e7bcd98 *inst/cats.jpg
@@ -35,7 +35,7 @@ d4b7df5d74c2c3d0d9984f268626bc92 *man/mime.Rd
 52c92a77d7c77ffb7d3dde4eec436b0c *man/qp_encode.Rd
 63d5f1f0fd162bd1275a6c476ff0f341 *man/reply.Rd
 bbbc2e906c5b6e8c0536037e1b5c06f7 *man/sender.Rd
-182ec858cf97dbafff2c63dcc8e66e76 *man/server.Rd
+6fb8becb7c5f238d28e0aeb957fccfb9 *man/server.Rd
 e9373431c5ae0a6ad2d9016d4f141823 *man/subject.Rd
 f77208e7530a1be56c879f7f06437501 *man/text.Rd
 b8d3144c7535cdd9caddcd3fff972066 *man/to.Rd
