@@ -1,120 +1,295 @@
-#' Add To field to message
+sanitise <- function(email, strip_comments = TRUE) {
+  email %>%
+    str_trim() %>%
+    str_replace("[:blank:]+@[:blank:]+", "@") %>%
+    str_remove_all("\\([^)]*\\)")
+}
+
+#' Tests whether an email address is syntactically correct
 #'
-#' @param msg A message object.
-#' @param ... Email addresses.
-#' @return A message object.
-#' @seealso \code{\link{cc}}, \code{\link{bcc}}, \code{\link{from}}, \code{\link{sender}}, \code{\link{reply}} and \code{\link{subject}}
+#' @param addr An email address.
+#'
+#' @return A Boolean.
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' to(msg, "bob@gmail.com", "alice@yahoo.com")
-#' to(msg, c("bob@gmail.com", "alice@yahoo.com"))
-to <- function(msg, ...){
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    msg$header$To
+#' compliant("alice@example.com")
+#' compliant("alice?example.com")
+compliant <- function(addr) {
+  addr <- as.address(addr)
+
+  email <- addr %>% raw()
+  local <- addr %>% local()
+  domain <- addr %>% domain()
+
+  # Test on whole email address.
+  #
+  email <- grepl("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}", email, ignore.case=TRUE)
+
+  # Test on local part.
+  #
+  local <- TRUE &
+    # No consecutive ".".
+    !grepl("[.]{2,}.*", local) &
+    # Only alphanumeric at beginning and end.
+    !grepl("^[^[:alnum:]]", local) &
+    !grepl("[^[:alnum:]]$", local) &
+    # Not longer than 64 characters.
+    !grepl(".{65,}", local) &
+    ifelse(
+      grepl('".*"', local),
+      # Quoted.
+      TRUE,
+      # Unquoted.
+      !grepl('[[:blank:]]+.*', local)             # No spaces in local.
+    )
+
+  # Test on domain.
+  #
+  domain <- TRUE &
+    # No funky symbols.
+    !grepl("[_]*", domain) &
+    # Not longer than 255 characters.
+    !grepl(".{256,}", domain)
+
+  email & local
+}
+
+#' Helper function for creating address objects
+#'
+#' @inheritParams address
+#'
+#' @return An \code{address} object, representing an email address.
+new_address <- function(
+  email = character(),
+  display = character(),
+  local = character(),
+  domain = character(),
+  normalise = TRUE
+) {
+  vec_assert(email, ptype = character())
+  vec_assert(display, ptype = character())
+  vec_assert(local, ptype = character())
+  vec_assert(domain, ptype = character())
+
+  email <- ifelse(!is.na(email), email, paste0(local, "@", domain))
+
+  if (normalise) {
+    email <- sanitise(email)
+    display <- str_squish(display)
+  }
+
+  new_rcrd(list(email = email, display = display), class = "vctrs_address")
+}
+
+#' Email Address
+#'
+#' Create an \code{address} object which represents an email address.
+#'
+#' Implemented as an \href{https://cran.r-project.org/package=vctrs/vignettes/s3-vector.html}{S3 vector class}.
+#'
+#' @param email Email address.
+#' @param display Display name.
+#' @param local Local part of email address.
+#' @param domain Domain part of email address.
+#' @param normalise Whether to normalise address to RFC-5321 requirements.
+#'
+#' @return An \code{address} object, representing an email address.
+#' @export
+#'
+#' @examples
+#' address("gerry@gmail.com")
+#' address("gerry@gmail.com", "Gerald")
+#' address(
+#'   c("gerry@gmail.com", "alice@yahoo.com", "jim@aol.com"),
+#'   c("Gerald", "Alice", NA)
+#' )
+address <- function(
+  email = NA,
+  display = NA,
+  local = NA,
+  domain = NA,
+  normalise = TRUE
+) {
+  if (any(is.na(email) & is.na(local) & is.na(domain))) {
+    stop("Either email or local and domain must be specified.", call. = FALSE)
+  }
+  if (any(!is.na(email) & (!is.na(local) | !is.na(domain)))) {
+    stop("Cannot specify both email and local/domain.", call. = FALSE)
+  }
+  if (any(is.na(email) & is.na(local) & !is.na(domain))) {
+    stop("Must specify local with domain.", call. = FALSE)
+  }
+  if (any(is.na(email) & !is.na(local) & is.na(domain))) {
+    stop("Must specify domain with local.", call. = FALSE)
+  }
+
+  # Cast email and display to character and recycle to same length.
+  #
+  # This operator could be done more cleanly using %<-% from {zeallot} but
+  # not doing that for the moment to avoid another dependency.
+  #
+  args <- do.call(
+    vec_recycle_common,
+    vec_cast_common(email, display, local, domain, .to = character())
+  ) %>%
+    setNames(c("email", "display", "local", "domain")) %>%
+    set("normalise", normalise)
+
+  do.call(new_address, args)
+}
+
+#' Encode email addresses in a common format
+#'
+#' @param x A vector of \code{address} objects.
+#' @param ... Further arguments passed to or from other methods.
+#'
+#' @return A character vector.
+#' @export
+format.vctrs_address <- function(x, ...) {
+  email <- field(x, "email")
+  display <- field(x, "display")
+
+  fmt <- ifelse(is.na(display), email, glue("{display} <{email}>"))
+  fmt[is.na(email)] <- NA
+
+  fmt
+}
+
+#' Display full type of vector
+#' @inheritParams vctrs::vec_ptype_full
+#' @export
+vec_ptype_full.vctrs_address <- function(x, ...) "address"
+
+#' Display abbreviated type of vector
+#' @inheritParams vctrs::vec_ptype_abbr
+#' @export
+vec_ptype_abbr.vctrs_address <- function(x, ...) "addr"
+
+#' Convert address object to character
+#'
+#' @param x  A vector of \code{address} objects.
+#' @param ... Further arguments passed to or from other methods.
+#'
+#' @return A character vector.
+#' @export
+as.character.vctrs_address <- function(x, ...) {
+  format(x, ...)
+}
+
+Ops.vctrs_address <- function(lhs, rhs)
+{
+  op = .Generic[[1]]
+  switch(op,
+         `==` = {
+           compare(raw(lhs), raw(rhs)) & compare(display(lhs), display(rhs))
+         },
+         stop("Undefined operation.", call. = FALSE)
+  )
+}
+
+#' Create an address object
+#'
+#' @param addr An email address.
+#'
+#' @return An \code{address} object.
+#' @export
+#'
+#' @examples
+#' as.address("gerry@gmail.com")
+#' as.address("Gerald <gerry@gmail.com>")
+#' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com", "jim@aol.com"))
+as.address <- function(addr) {
+  if ("vctrs_address" %in% class(addr)) {
+    addr
   } else {
-    msg$header$To <- arguments
-    invisible(msg)
+    display <- ifelse(
+      str_detect(addr, "[<>]"),
+      str_extract(addr, ".*<") %>% str_remove("<"),
+      NA
+    )
+    email <- ifelse(
+      str_detect(addr, "[<>]"),
+      str_extract(addr, "<.*>") %>% str_remove_all("[<>]"),
+      addr
+    )
+
+    address(email, display)
   }
 }
 
-#' Add From field to message
+#' Print an address object
 #'
-#' @param msg A message object.
-#' @param from Email address.
-#' @return A message object.
-#' @seealso \code{\link{to}}, \code{\link{cc}}, \code{\link{bcc}}, \code{\link{sender}}, \code{\link{reply}} and \code{\link{subject}}
+#' @param x An \code{address} object.
+#' @param ... Further arguments passed to or from other methods.
+#'
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' from(msg, "craig@gmail.com")
-from <- function(msg, from = NULL){
-  if (is.null(from)) {
-    msg$header$From
-  } else {
-    msg$header$From <- from
-    invisible(msg)
-  }
+#' gerry <- as.address("gerry@gmail.com")
+#' print(gerry)
+print.vctrs_address <- function(x, ...) {
+  print(format(x))
 }
 
-#' Add Cc field to message
+#' Extract raw email address
 #'
-#' @param msg A message object.
-#' @param ... Email addresses.
-#' @return A message object.
-#' @seealso \code{\link{to}}, \code{\link{bcc}}, \code{\link{from}}, \code{\link{sender}}, \code{\link{reply}} and \code{\link{subject}}
+#' Strips the display name off an email address (if present).
+#'
+#' @param addr An \code{address} object.
+#'
+#' @return A raw email address.
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' cc(msg, "bob@gmail.com", "alice@yahoo.com")
-#' cc(msg, c("bob@gmail.com", "alice@yahoo.com"))
-cc <- function(msg, ...){
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    msg$header$Cc
-  } else {
-    msg$header$Cc <- arguments
-    invisible(msg)
-  }
+#' gerry <- as.address("Gerald <gerry@gmail.com>")
+#' raw(gerry)
+raw <- function(addr) {
+  field(addr, "email")
 }
 
-#' Add Bcc field to message
+#' Extract display name
 #'
-#' @param msg A message object.
-#' @param ... Email addresses.
-#' @return A message object.
-#' @seealso \code{\link{to}}, \code{\link{cc}}, \code{\link{from}}, \code{\link{sender}}, \code{\link{reply}} and \code{\link{subject}}
+#' Extracts the display name from an email address.
+#'
+#' @param addr An \code{address} object.
+#'
+#' @return The display name or \code{NA}.
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' bcc(msg, "bob@gmail.com", "alice@yahoo.com")
-#' bcc(msg, c("bob@gmail.com", "alice@yahoo.com"))
-bcc <- function(msg, ...){
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    msg$header$Bcc
-  } else {
-    msg$header$Bcc <- arguments
-    invisible(msg)
-  }
+#' gerry <- as.address("Gerald <gerry@gmail.com>")
+#' display(gerry)
+display <- function(addr) {
+  field(addr, "display")
 }
 
-#' Add Reply-To field to message
+#' Extract local part of email address
 #'
-#' @param msg A message object.
-#' @param reply_to Email address.
-#' @return A message object.
-#' @seealso \code{\link{to}}, \code{\link{cc}}, \code{\link{bcc}}, \code{\link{from}}, \code{\link{sender}} and \code{\link{subject}}
+#' @param addr An \code{address} object.
+#'
+#' @return A character vector.
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' reply(msg, "gerry@gmail.com")
-reply <- function(msg, reply_to = NULL){
-  if (is.null(reply_to)) {
-    msg$header$Reply_To
-  } else {
-    msg$header$Reply_To <- reply_to
-    invisible(msg)
-  }
+#' local("alice@example.com")
+local <- function(addr) {
+  addr <- as.address(addr)
+  raw(addr) %>%
+    str_remove("@.*$")
 }
 
-#' Add Sender (on behalf of) field to message
+#' Extract domain of email address
 #'
-#' @param msg A message object.
-#' @param sender Email address.
-#' @return A message object.
-#' @seealso \code{\link{to}}, \code{\link{cc}}, \code{\link{bcc}}, \code{\link{from}}, \code{\link{reply}} and \code{\link{subject}}
+#' @param addr An \code{address} object.
+#'
+#' @return A character vector.
 #' @export
+#'
 #' @examples
-#' msg <- envelope()
-#' sender(msg, "on_behalf_of@gmail.com")
-sender <- function(msg, sender = NULL){
-  if (is.null(sender)) {
-    msg$header$Sender
-  } else {
-    msg$header$Sender <- sender
-    invisible(msg)
-  }
+#' domain("alice@example.com")
+domain <- function(addr) {
+  addr <- as.address(addr)
+  raw(addr) %>%
+    str_remove("^.*@")
 }
-

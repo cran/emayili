@@ -1,7 +1,7 @@
 Type: Package
 Package: emayili
 Title: Send Email Messages
-Version: 0.4.15
+Version: 0.4.16
 Authors@R: 
     c(person(given = c("Andrew", "B."),
              family = "Collier",
@@ -32,13 +32,13 @@ Description: A light, simple tool for sending emails with minimal dependencies.
 URL: https://datawookie.github.io/emayili/
 BugReports: https://github.com/datawookie/emayili/issues
 License: GPL-3
-Imports: base64enc, curl (>= 4.0), glue, httr, magrittr, mime, purrr,
-        stringi, stringr
+Imports: base64enc, curl (>= 4.0), dplyr, glue, httr, magrittr, mime,
+        purrr, stringi, stringr, tibble, tidyr, vctrs
 Suggests: here, testthat (>= 2.1.0), roxygen2, showtext
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-07-30 04:33:46 UTC; wookie
+Packaged: 2021-08-21 05:39:18 UTC; wookie
 Author: Andrew B. Collier [aut, cre],
   Matt Dennis [ctb],
   Antoine Bichat [ctb] (<https://orcid.org/0000-0001-6599-7081>),
@@ -47,4 +47,4 @@ Author: Andrew B. Collier [aut, cre],
   Panagiotis Moulos [ctb]
 Maintainer: Andrew B. Collier <andrew.b.collier@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-07-30 05:20:02 UTC
+Date/Publication: 2021-08-21 15:40:06 UTC
