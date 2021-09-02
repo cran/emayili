@@ -1,11 +1,23 @@
 sanitise <- function(email, strip_comments = TRUE) {
   email %>%
     str_trim() %>%
-    str_replace("[:blank:]+@[:blank:]+", "@") %>%
-    str_remove_all("\\([^)]*\\)")
+    str_replace("[:blank:]+@[:blank:]+", "@") %>% {
+      if (strip_comments) {
+        str_remove_all(., "\\([^)]*\\)")
+      } else {
+        .
+      }
+    }
 }
 
 #' Tests whether an email address is syntactically correct
+#'
+#' Checks whether an email address conforms to the [syntax rules](https://en.wikipedia.org/wiki/Email_address#Syntax).
+#'
+#' An email address may take either of the following forms:
+#'
+#' - `local@domain` or
+#' - `Display Name <local@domain>`.
 #'
 #' @param addr An email address.
 #'
@@ -92,7 +104,7 @@ new_address <- function(
 #' @param display Display name.
 #' @param local Local part of email address.
 #' @param domain Domain part of email address.
-#' @param normalise Whether to normalise address to RFC-5321 requirements.
+#' @param normalise Whether to try to normalise address to RFC-5321 requirements.
 #'
 #' @return An \code{address} object, representing an email address.
 #' @export

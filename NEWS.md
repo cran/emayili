@@ -1,3 +1,18 @@
+# {emayili} 0.4.17
+
+* Fix regression in From and Sender header fields.
+* Improve test for formatting of header fields.
+
+# {emayili} 0.4.16
+
+* Add `address` class with the following methods:
+
+  - `compliant()`
+  - `raw()`
+  - `display()`
+  - `local()` and
+  - `domain()`.
+
 # {emayili} 0.4.15
 
 * Moved testing to GitHub actions
