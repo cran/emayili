@@ -1,3 +1,7 @@
+is.envelope <- function(x) {
+  "envelope" %in% class(x)
+}
+
 #' Create a message.
 #'
 #' @param to See \code{to()}
@@ -41,8 +45,7 @@ envelope <- function(
       header = list(
         Date = http_date(Sys.time())
       ),
-      boundary = paste(sprintf("%x", sample(64, size = 16, replace = TRUE)), collapse = ""),
-      parts = list()
+      parts = NULL
     ),
     class="envelope")
 
@@ -78,12 +81,51 @@ envelope <- function(
 #' print(msg)
 print.envelope <- function(x, details = NA, ...) {
   if (is.na(details)) {
-    details = get_option_details(default = NA)
-  }
-  if (is.na(details)) {
-    details = FALSE
+    details = get_option_details(default = FALSE)
   }
   if (!is.logical(details)) stop("details must be Boolean.", call. = FALSE)
-
+  #
   ifelse(details, as.character(x), header(x)) %>% cat()
+}
+
+#' Create formatted message.
+#'
+#' Accepts a message object and formats it as a MIME document.
+#'
+#' @param x A message object.
+#' @param ... Further arguments passed to or from other methods.
+#' @export
+#'
+#' @return A formatted message object.
+as.character.envelope <- function(x, ...) {
+  CONTENT_TYPE = "multipart/related"
+
+  message <- list(
+    header(x),
+    "MIME-Version:              1.0"
+  )
+
+  if (length(x$parts) > 1) {
+    body <- multipart_mixed(children = x$parts)
+  } else {
+    body <- x$parts[[1]]
+  }
+
+  message <- c(message, as.character(body))
+
+  do.call(paste0, c(list(message), collapse = "\r\n"))
+}
+
+#' Append children to message
+#'
+#' @param x Message object
+#' @param child A child to be appended
+append.envelope <- function(x, child) {
+  if(is.null(x$parts)) {
+    x$parts <- list(child)
+  } else {
+    x$parts <- c(list(msg$parts), list(child))
+  }
+
+  x
 }

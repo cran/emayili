@@ -60,8 +60,8 @@ server <- function(
   pause_base = 1,
   max_times = 5,
   ...) {
-  sender <- function(msg, verbose = FALSE) {
-    debugfunction <- if (verbose) function(type, msg) cat(readBin(msg, character()), file = stderr())
+  function(msg, verbose = FALSE) {
+    debugfunction <- if (verbose) function(type, msg) cat(readBin(msg, character()), file = stderr()) # nocov
 
     recipients <- c(msg$header$To, msg$header$Cc, msg$header$Bcc)
     #
@@ -107,33 +107,24 @@ server <- function(
     #
     # This is to mitigate occasional curl_fetch_memory() errors.
     #
-    send_mail <- insistently(
-      send_mail,
-      rate = rate_backoff(
-        max_times = max_times,
-        pause_base = pause_base,
-        pause_cap = pause_base * 2**max_times,
-        jitter = FALSE
+    if (max_times > 1) {
+      send_mail <- insistently(
+        send_mail,
+        rate = rate_backoff(
+          max_times = max_times,
+          pause_base = pause_base,
+          pause_cap = pause_base * 2**max_times,
+          jitter = FALSE
+        )
       )
-    )
-
-    # Strip descriptive name.
-    #
-    # - Changes "Bart Simpson <bart@eatmyshorts.com>" → "bart@eatmyshorts.com".
-    # - Doesn't change "homer@doh.biz".
-    #
-    # The descriptive name is still retained in email header so that it appears
-    # in the email client.
-    #
-    strip_name <- function(address) {
-      if (!is.null(address)) {
-        str_replace_all(address, "(^.*<|>$)", "")
-      }
     }
 
     result <- send_mail(
-      mail_from = strip_name(msg$header$From),
-      mail_rcpt = strip_name(recipients),
+      # Strip descriptive name (retained in email header so that it appears
+      # in email client).
+      mail_from = raw(msg$header$From),
+      mail_rcpt = raw(recipients),
+      #
       message = as.character(msg),
       smtp_server = smtp_server,
       username = username,

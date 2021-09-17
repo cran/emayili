@@ -1,6 +1,18 @@
+# {emayili} 0.5.0
+
+* Require {rlang}-0.4.3.
+
+# {emayili} 0.4.20
+
+* Render R Markdown into HTML body (separate functions for plain & R Markdown).
+
+# {emayili} 0.4.19
+
+* Render plain Markdown into HTML body.
+
 # {emayili} 0.4.18
 
-* Add envelope_details option.
+* Add envelope_details and envelope_invisible options.
 * Enable {glue} interpolation in text().
 
 # {emayili} 0.4.17
@@ -41,5 +53,4 @@
 
 * Email addresses can include name. Both "Bart Simpson <bart@eatmyshorts.com>"
   and "bart@eatmyshorts.com" are valid (#67).
-
 * Add `NEWS.md` (#66).

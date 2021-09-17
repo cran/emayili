@@ -15,13 +15,17 @@ coverage](https://img.shields.io/codecov/c/github/datawookie/emayili.svg)](https
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->
 
-emayili is a package for sending emails from R. The design goals are:
+`{emayili}` is a package for sending emails from R. The design goals
+are:
 
 -   works on all manner of SMTP servers and
 -   has minimal dependencies (or dependencies which are easily
     satisfied).
 
-The package name is an adaption of the Zulu word for email, imeyili.
+The package name is an adaption of the Zulu word for email, *imeyili*.
+
+The documentation for `{emayili}` can be found
+[here](https://datawookie.github.io/emayili/).
 
 ## Installation
 
@@ -110,13 +114,12 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:         Fri, 03 Sep 2021 06:17:59 GMT
-    From:         alice@yahoo.com
-    To:           bob@google.com
-    Cc:           craig@google.com
-    Subject:      This is a plain text message!
-    Sender:       character(0)
-    X-Mailer:     {emayili}-0.4.17
+    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
+    From:                      alice@yahoo.com
+    To:                        bob@google.com
+    Cc:                        craig@google.com
+    Subject:                   This is a plain text message!
+    X-Mailer:                  {emayili}-0.4.20
 
 You can identify emails which have been sent using `{emayili}` by the
 presence of an `X-Mailer` header which includes both the package name
@@ -124,23 +127,25 @@ and version.
 
 If you want to see the complete MIME object, just convert to a string.
 
-``` r
-as.character(email)
-```
-
 You can also call the `print()` method and specify `details = TRUE`.
 
-``` r
-print(email, details = TRUE)
-```
-
-You can set the `envelope_details` option to assert that these details
+You can set the `envelope_details` option to assert that the details
 should always be printed.
 
 ``` r
 # Always print envelope details.
 #
 options(envelope_details = TRUE)
+```
+
+By default the results returned by most of the methods are invisible.
+You can make them visible via the `envelope_invisible` (default:
+`TRUE`).
+
+``` r
+# Always show envelope.
+#
+options(envelope_invisible = FALSE)
 ```
 
 ### Interpolating Text
@@ -154,6 +159,54 @@ name = "Alice"
 envelope() %>%
   text("Hello {name}!")
 ```
+
+    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
+    X-Mailer:                  {emayili}-0.4.20
+    MIME-Version:              1.0
+    Content-Type:              text/plain; charset=utf-8
+    Content-Disposition:       inline
+    Content-Transfer-Encoding: 7bit
+
+    Hello {name}!
+
+### Rendering Markdown
+
+You can render Markdown straight into a message.
+
+Use either plain Markdown.
+
+``` r
+envelope() %>%
+  # Render plain Markdown from a character vector.
+  render(
+    "Check out `{emayili}` on [CRAN](https://cran.r-project.org/package=emayili).",
+    plain = TRUE
+  )
+```
+
+    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
+    X-Mailer:                  {emayili}-0.4.20
+    MIME-Version:              1.0
+    Content-Type:              text/html; charset=utf-8
+    Content-Disposition:       inline
+
+    <p>Check out <code>{emayili}</code> on <a href="https://cran.r-project.org/package=emayili">CRAN</a>.</p>
+
+Or R Markdown.
+
+``` r
+envelope() %>%
+  # Render R Markdown from a file.
+  render("message.Rmd")
+```
+
+In both cases the function will accept either a file path or a character
+vector containing Markdown text.
+
+<img src="man/figures/screenshot-email-rendered.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
+
+🚨 **Note:** Inline images embedded in the rendered HTML will not appear
+in the GMail (and potentially other) web client.
 
 ### Adding an Inline Image
 
@@ -254,3 +307,38 @@ There is a selection of other R packages which also send emails:
 -   [mailR](https://cran.r-project.org/package=mailR)
 -   [sendmailR](https://cran.r-project.org/package=sendmailR)
 -   [ponyexpress](https://github.com/ropensci-archive/ponyexpress)
+
+## Developer Notes
+
+### Code Coverage
+
+You can find the test coverage report at
+[Codecov](https://app.codecov.io/gh/datawookie/emayili). For
+developmnent purposes it’s more convenient to use the
+[`{covr}`](https://cran.r-project.org/package=covr) package.
+
+Generate a coverage report.
+
+``` r
+library(covr)
+
+report()
+```
+
+Calculate test coverage.
+
+``` r
+coverage <- package_coverage()
+```
+
+Coverage statistics as a data frame.
+
+``` r
+as.data.frame(coverage)
+```
+
+Show lines without coverage.
+
+``` r
+zero_coverage(coverage)
+```

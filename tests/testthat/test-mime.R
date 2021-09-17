@@ -1,11 +1,29 @@
-test_that("parameter value encoding (unquoted)", {
-  expect_equal(parameter_value_encode("I'm not quoted.csv"), "=\"I'm not quoted.csv\"")
+test_that("children must be MIME", {
+  expect_error(MIME(children = list(1)), ERROR_NOT_MIME_OBJECT)
+  expect_error(append.MIME(emayili:::MIME(), 1), ERROR_NOT_MIME_OBJECT)
 })
 
-test_that("parameter value encoding (quoted)", {
-  expect_equal(parameter_value_encode("\"I'm quoted\".csv"), "*=utf-8''%22I'm%20quoted%22.csv")
+test_that("create multipart/mixed", {
+  expect_equal(class(multipart_mixed()), c("multipart_mixed", "MIME"))
 })
 
-test_that("parameter value encoding (non-ASCII)", {
-  expect_equal(parameter_value_encode("señor.csv"), "*=utf-8''se%C3%B1or.csv")
+test_that("convert single child to list", {
+  expect_type(MIME(children = text_plain("Hello!"))$children, "list")
+})
+
+test_that("missing disposition", {
+  mime_txt <- other(TXTPATH, disposition = NA)
+  mime_png <- other(PNGPATH, disposition = NA)
+
+  expect_match(mime_txt$type, "^text/plain")
+  expect_match(mime_png$type, "^image/png")
+
+  expect_match(mime_txt$disposition, "^inline")
+  expect_match(mime_png$disposition, "^attachment")
+})
+
+test_that("print", {
+  mime_txt <- other(TXTPATH, disposition = NA)
+
+  expect_output(print(mime_txt), as.character(mime_txt))
 })

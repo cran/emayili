@@ -20,6 +20,7 @@ sanitise <- function(email, strip_comments = TRUE) {
 #' - `Display Name <local@domain>`.
 #'
 #' @param addr An email address.
+#' @param error Whether to create an error if not compliant.
 #'
 #' @return A Boolean.
 #' @export
@@ -27,7 +28,7 @@ sanitise <- function(email, strip_comments = TRUE) {
 #' @examples
 #' compliant("alice@example.com")
 #' compliant("alice?example.com")
-compliant <- function(addr) {
+compliant <- function(addr, error = FALSE) {
   addr <- as.address(addr)
 
   email <- addr %>% raw()
@@ -64,7 +65,12 @@ compliant <- function(addr) {
     # Not longer than 255 characters.
     !grepl(".{256,}", domain)
 
-  email & local
+  okay <- email & local
+  if (error && !okay) {
+    stop(paste0("Address '", addr, "' invalid."), call. = FALSE)
+  } else {
+    okay
+  }
 }
 
 #' Helper function for creating address objects
@@ -168,15 +174,26 @@ format.vctrs_address <- function(x, ...) {
   fmt
 }
 
+
 #' Display full type of vector
-#' @inheritParams vctrs::vec_ptype_full
+#'
+#' Need to import the vec_ptype_full() generic.
+#'
+#' @noRd
 #' @export
-vec_ptype_full.vctrs_address <- function(x, ...) "address"
+vec_ptype_full.vctrs_address <- function(x) {
+  "address"
+}
 
 #' Display abbreviated type of vector
-#' @inheritParams vctrs::vec_ptype_abbr
+#'
+#' Need to import the vec_ptype_abbr() generic.
+#'
+#' @noRd
 #' @export
-vec_ptype_abbr.vctrs_address <- function(x, ...) "addr"
+vec_ptype_abbr.vctrs_address <- function(x) {
+  "addr"
+}
 
 #' Convert address object to character
 #'
@@ -191,12 +208,18 @@ as.character.vctrs_address <- function(x, ...) {
 
 Ops.vctrs_address <- function(lhs, rhs)
 {
+  if (!("address" %in% class(rhs))) rhs <- as.address(rhs)
+
   op = .Generic[[1]]
-  switch(op,
-         `==` = {
-           compare(raw(lhs), raw(rhs)) & compare(display(lhs), display(rhs))
-         },
-         stop("Undefined operation.", call. = FALSE)
+  switch(
+    op,
+    `==` = {
+      compare(raw(lhs), raw(rhs)) & compare(display(lhs), display(rhs))
+    },
+    `!=` = {
+      !compare(raw(lhs), raw(rhs)) | !compare(display(lhs), display(rhs))
+    },
+    stop("Undefined operation.", call. = FALSE)
   )
 }
 
@@ -211,10 +234,16 @@ Ops.vctrs_address <- function(lhs, rhs)
 #' as.address("gerry@gmail.com")
 #' as.address("Gerald <gerry@gmail.com>")
 #' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com", "jim@aol.com"))
+#' as.address("Gerald <gerry@gmail.com>, alice@yahoo.com, jim@aol.com")
+#' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com, jim@aol.com"))
 as.address <- function(addr) {
   if ("vctrs_address" %in% class(addr)) {
     addr
   } else {
+    # Check if multiple comma-separated addresses.
+    #
+    addr <- str_split(addr, ", *") %>% unlist()
+    #
     display <- ifelse(
       str_detect(addr, "[<>]"),
       str_extract(addr, ".*<") %>% str_remove("<"),
