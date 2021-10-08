@@ -5,8 +5,16 @@ msg <- envelope() %>%
 msg_no_recipient <- envelope() %>%
   from(SMTP_USERNAME)
 
+msg_no_sender <- envelope() %>%
+  to(SMTP_USERNAME)
+
 test_that("server type", {
   expect_type(smtp, "closure")
+})
+
+test_that("error if sender missing", {
+  skip_on_cran()
+  expect_error(smtp(msg_no_sender), "Must specify who the email is from.")
 })
 
 test_that("error if recipient missing", {
@@ -53,7 +61,7 @@ test_that("sends message with text attachment", {
 
 test_that("sends message with image attachment", {
   msg <- msg %>%
-    attachment(PNGPATH)
+    attachment(JPGPATH)
 
   skip_on_cran()
   expect_error(smtp(msg %>% subject("{emayili} test: Image attachment")), NA)
@@ -62,7 +70,7 @@ test_that("sends message with image attachment", {
 test_that("sends message with image attachment (using CID)", {
   msg <- msg %>%
     html('<img src="cid:r-logo"/>') %>%
-    attachment(PNGPATH, cid = "r-logo", type = "image/png")
+    attachment(JPGPATH, cid = "r-logo", type = "image/jpg")
 
   skip_on_cran()
   expect_error(smtp(msg %>% subject("{emayili} test: Image attachment (using CID)")), NA)
@@ -79,4 +87,10 @@ test_that("verbose output", {
   )
 
   expect_length(capture.output(smtp(msg), type = "message"), 0)
+})
+
+test_that("replace bare line feeds", {
+  msg <- envelope() %>% render("Hello!")
+
+  expect_false(as.character(msg) %>% str_detect(REGEX_BARE_LINEFEED))
 })

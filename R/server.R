@@ -17,17 +17,21 @@
 #' library(magrittr)
 #'
 #' # Set parameters for SMTP server (with username and password)
-#' smtp <- server(host = "smtp.gmail.com",
-#'                port = 465,
-#'                username = "bob@gmail.com",
-#'                password = "bd40ef6d4a9413de9c1318a65cbae5d7")
+#' smtp <- server(
+#'   host = "smtp.gmail.com",
+#'   port = 465,
+#'   username = "bob@gmail.com",
+#'   password = "bd40ef6d4a9413de9c1318a65cbae5d7"
+#' )
 #'
 #' # Set parameters for a (fake) testing SMTP server.
 #' #
 #' # More information about this service can be found at https://www.smtpbucket.com/.
 #' #
-#' smtp <- server(host = "mail.smtpbucket.com",
-#'                port = 8025)
+#' smtp <- server(
+#'   host = "mail.smtpbucket.com",
+#'   port = 8025
+#' )
 #'
 #' # Create a message
 #' msg <- envelope() %>%
@@ -63,9 +67,11 @@ server <- function(
   function(msg, verbose = FALSE) {
     debugfunction <- if (verbose) function(type, msg) cat(readBin(msg, character()), file = stderr()) # nocov
 
-    recipients <- c(msg$header$To, msg$header$Cc, msg$header$Bcc)
+    if (is.null(from(msg))) stop("Must specify who the email is from.")
+
+    recipients <- c(to(msg), cc(msg), bcc(msg))
     #
-    if (length(recipients) < 1) stop("Must specify at least one email recipient.", call. = FALSE)
+    if (length(recipients) < 1) stop("Must specify at least one email recipient.")
 
     # See curl::curl_options() for available options.
     #
@@ -94,10 +100,9 @@ server <- function(
       use_ssl = 0
     }
 
-    protocol <- ifelse(port == 465, "smtps", "smtp")
     helo <- ifelse(is.na(helo), "", helo)
 
-    smtp_server <- sprintf("%s://%s:%d/%s", protocol, host, port, helo)
+    smtp_server <- sprintf("%s:%d/%s", host, port, helo)
     #
     if (verbose) {
       cat("Sending email to ", smtp_server, ".\n", file = stderr(), sep = "")
@@ -122,7 +127,7 @@ server <- function(
     result <- send_mail(
       # Strip descriptive name (retained in email header so that it appears
       # in email client).
-      mail_from = raw(msg$header$From),
+      mail_from = raw(from(msg)),
       mail_rcpt = raw(recipients),
       #
       message = as.character(msg),

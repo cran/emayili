@@ -1,10 +1,52 @@
+# {emayili} 0.6.1
+
+* Add importance() for Importance header field.
+* Add priority() for Priority header field.
+* Add Content-MD5 header field.
+
+# {emayili} 0.6.0
+
+* Refactor representation of Mail and MIME headers.
+
+# {emayili} 0.5.6
+
+* Also support include_css in html().
+
+# {emayili} 0.5.5
+
+* Use include_css option to specify what rendered CSS is included. Can specify
+  a combination of "rmd", "bootstrap" and "highlight".
+
+# {emayili} 0.5.4
+
+* Wrap <img> in <figure> and support fig.cap, fig.alt & fig.class.
+
+# {emayili} 0.5.3
+
+* Cache rendered Markdown.
+
+# {emayili} 0.5.2
+
+* Pass params argument through to `rmarkdown::render()`.
+* Include extra CSS.
+* Include external CSS.
+* Replace bare `"\n"` with `"\r\n"`.
+
+# {emayili} 0.5.1
+
+* Add SystemRequirements for pandoc.
+* Check for pandoc before calling render().
+* Complete test coverage.
+
 # {emayili} 0.5.0
 
-* Require {rlang}-0.4.3.
+* Interpolate in subject() and html().
+* Improved test coverage.
 
 # {emayili} 0.4.20
 
 * Render R Markdown into HTML body (separate functions for plain & R Markdown).
+* Add MIME class.
 
 # {emayili} 0.4.19
 

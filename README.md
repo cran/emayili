@@ -79,6 +79,18 @@ email <- email %>%
 There are also `bcc()` and `reply()` functions for setting the `Bcc` and
 `Reply-To` fields.
 
+You can supply multiple addresses in a variety of formats:
+
+-   as a single comma-separated string
+-   as separate strings; or
+-   as a vector of strings.
+
+``` r
+envelope() %>% to("bob@google.com, craig@google.com, erin@gmail.com")
+envelope() %>% to("bob@google.com", "craig@google.com", "erin@gmail.com")
+envelope() %>% to(c("bob@google.com", "craig@google.com", "erin@gmail.com"))
+```
+
 Add a subject.
 
 ``` r
@@ -114,12 +126,13 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
+    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
+    X-Mailer:                  {emayili}-0.6.1
+    MIME-Version:              1.0
     From:                      alice@yahoo.com
     To:                        bob@google.com
     Cc:                        craig@google.com
     Subject:                   This is a plain text message!
-    X-Mailer:                  {emayili}-0.4.20
 
 You can identify emails which have been sent using `{emayili}` by the
 presence of an `X-Mailer` header which includes both the package name
@@ -129,23 +142,25 @@ If you want to see the complete MIME object, just convert to a string.
 
 You can also call the `print()` method and specify `details = TRUE`.
 
-You can set the `envelope_details` option to assert that the details
+### Options
+
+You can set the `envelope.details` option to assert that the details
 should always be printed.
 
 ``` r
 # Always print envelope details.
 #
-options(envelope_details = TRUE)
+options(envelope.details = TRUE)
 ```
 
 By default the results returned by most of the methods are invisible.
-You can make them visible via the `envelope_invisible` (default:
+You can make them visible via the `envelope.invisible` (default:
 `TRUE`).
 
 ``` r
 # Always show envelope.
 #
-options(envelope_invisible = FALSE)
+options(envelope.invisible = FALSE)
 ```
 
 ### Interpolating Text
@@ -157,17 +172,18 @@ message.
 name = "Alice"
 
 envelope() %>%
-  text("Hello {name}!")
+  text("Hello {{name}}!")
 ```
 
-    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
-    X-Mailer:                  {emayili}-0.4.20
+    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
+    X-Mailer:                  {emayili}-0.6.1
     MIME-Version:              1.0
     Content-Type:              text/plain; charset=utf-8
     Content-Disposition:       inline
     Content-Transfer-Encoding: 7bit
+    Content-MD5:               nhjeY5ZYMzru+kSCGUzNKg==
 
-    Hello {name}!
+    Hello Alice!
 
 ### Rendering Markdown
 
@@ -179,18 +195,18 @@ Use either plain Markdown.
 envelope() %>%
   # Render plain Markdown from a character vector.
   render(
-    "Check out `{emayili}` on [CRAN](https://cran.r-project.org/package=emayili).",
-    plain = TRUE
+    "Check out [`{emayili}`](https://cran.r-project.org/package=emayili)."
   )
 ```
 
-    Date:                      Wed, 15 Sep 2021 07:07:25 GMT
-    X-Mailer:                  {emayili}-0.4.20
+    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
+    X-Mailer:                  {emayili}-0.6.1
     MIME-Version:              1.0
     Content-Type:              text/html; charset=utf-8
     Content-Disposition:       inline
 
-    <p>Check out <code>{emayili}</code> on <a href="https://cran.r-project.org/package=emayili">CRAN</a>.</p>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+    <html><body><p>Check out <a href="https://cran.r-project.org/package=emayili"><code>{emayili}</code></a>.</p></body></html>
 
 Or R Markdown.
 
@@ -205,8 +221,36 @@ vector containing Markdown text.
 
 <img src="man/figures/screenshot-email-rendered.png" style="filter: drop-shadow(5px 5px 5px black); margin-bottom: 5px;">
 
-🚨 **Note:** Inline images embedded in the rendered HTML will not appear
-in the GMail (and potentially other) web client.
+Interpolation also works with `render()`.
+
+### Rendered CSS
+
+When you render an R Markdown document the resulting HTML includes CSS
+from three sources:
+
+-   [Bootstrap](https://getbootstrap.com/)
+-   [highlightjs](https://highlightjs.org/) and
+-   `{rmarkdown}`.
+
+You can control which of these propagate to the message using the
+`include_css` parameter which, by default, is set to
+`c("rmd", "bootstrap", "highlight")`.
+
+🚨 *Note:* Gmail doesn’t like the Bootstrap CSS. If you want your styling
+to work on Gmail you should set `include_css =  c("rmd", "highlight")`.
+
+### Extra CSS
+
+You can insert extra CSS into your rendered messages.
+
+``` r
+envelope() %>%
+  render("message.Rmd", css_files = "extra.css")
+```
+
+If you are having trouble getting this to work with Gmail then it might
+be worthwhile taking a look at their [CSS
+support](https://developers.google.com/gmail/design/css).
 
 ### Adding an Inline Image
 
@@ -283,7 +327,6 @@ this, you can grant access to less secure apps. See the links below for
 specifics:
 
 -   [Google](https://myaccount.google.com/security)
-    ([details](https://support.google.com/accounts/answer/6010255))
 -   [Yahoo!](https://login.yahoo.com/account/security) and
 -   [AOL](https://login.aol.com/account/security).
 
@@ -313,14 +356,18 @@ There is a selection of other R packages which also send emails:
 ### Code Coverage
 
 You can find the test coverage report at
-[Codecov](https://app.codecov.io/gh/datawookie/emayili). For
-developmnent purposes it’s more convenient to use the
+[Codecov](https://app.codecov.io/gh/datawookie/emayili). For development
+purposes it’s more convenient to use the
 [`{covr}`](https://cran.r-project.org/package=covr) package.
 
 Generate a coverage report.
 
 ``` r
 library(covr)
+
+# Tests that are skipped on CRAN should still be included in coverage report.
+#
+Sys.setenv(NOT_CRAN = "true")
 
 report()
 ```
@@ -341,4 +388,36 @@ Show lines without coverage.
 
 ``` r
 zero_coverage(coverage)
+```
+
+### Checks
+
+Check spelling.
+
+``` r
+spelling::spell_check_package()
+```
+
+Use [rhub](https://r-hub.github.io/rhub/) to test on various platforms.
+
+``` r
+# Check for a specific platform.
+#
+rhub::check(platform = "debian-gcc-devel")
+rhub::check_on_windows(check_args = "--force-multiarch")
+rhub::check_on_solaris()
+
+# Check on a bunch of platforms.
+#
+rhub::check_for_cran()
+
+# Check on important platforms.
+#
+rhub::check_for_cran(platforms = c(
+  "debian-gcc-release",
+  "ubuntu-gcc-release",
+  "macos-m1-bigsur-release",
+  "windows-x86_64-release",
+  NULL
+))
 ```

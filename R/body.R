@@ -59,12 +59,13 @@ text <- function(
 
   msg <- append(msg, body)
 
-  if (get_option_invisible()) invisible(msg) else msg
+  if (get_option_invisible()) invisible(msg) else msg # nocov
 }
 
 #' Add an HTML body to a message object.
 #'
 #' @inheritParams text
+#' @param css_files Extra CSS files.
 #' @return A message object.
 #' @seealso \code{\link{text}}
 #' @export
@@ -72,16 +73,19 @@ text <- function(
 #' library(magrittr)
 #'
 #' # Inline HTML message.
-#' msg <- envelope() %>% html("<b>Hello!</b>")
+#' envelope() %>% html("<b>Hello!</b>")
 #'
 #' # Read HTML message from a file.
-#' msg <- envelope() %>% html("message.html")
+#' htmlfile <- tempfile(fileext = ".html")
+#' cat("<p>Hello!</p>\n", file = htmlfile)
+#' envelope() %>% html(htmlfile)
 html <- function(
   msg,
   content,
   disposition = "inline",
   charset = "utf-8",
   encoding = "quoted-printable",
+  css_files = c(),
   interpolate = TRUE,
   .open = "{{",
   .close = "}}",
@@ -100,7 +104,10 @@ html <- function(
 
   if (interpolate) content <- glue(content, .open = .open, .close = .close, .envir = .envir)
 
-  body <- text_html(content, disposition, charset, encoding)
+  body <- text_html(
+    content, disposition, charset, encoding,
+    css = read_text(css_files)
+  )
 
   msg <- append(msg, body)
 

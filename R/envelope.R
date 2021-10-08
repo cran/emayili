@@ -2,31 +2,74 @@ is.envelope <- function(x) {
   "envelope" %in% class(x)
 }
 
+new_envelope <- function(
+  to,
+  from,
+  cc,
+  bcc,
+  reply,
+  subject,
+  importance,
+  priority,
+  text,
+  html
+) {
+  koevert <- structure(
+    list(
+      headers = list(),
+      parts = NULL
+    ),
+    class="envelope"
+  ) %>%
+    header_set("Date", http_date(Sys.time()), append = FALSE) %>%
+    header_set("X-Mailer", paste("{emayili}", packageVersion("emayili"), sep = "-"), append = FALSE) %>%
+    header_set("MIME-Version", "1.0", append = FALSE)
+
+  if (!is.null(to)) koevert <- to(koevert, to)
+  if (!is.null(from)) koevert <- from(koevert, from)
+  if (!is.null(cc)) koevert <- cc(koevert, cc)
+  if (!is.null(bcc)) koevert <- bcc(koevert, bcc)
+  if (!is.null(reply)) koevert <- reply(koevert, reply)
+  if (!is.null(subject)) koevert <- subject(koevert, subject)
+  if (!is.null(importance)) koevert <- importance(koevert, importance)
+  if (!is.null(priority)) koevert <- priority(koevert, priority)
+  if (!is.null(text)) koevert <- text(koevert, text)
+  if (!is.null(html)) koevert <- html(koevert, html)
+
+  koevert
+}
+
 #' Create a message.
 #'
-#' @param to See \code{to()}
-#' @param from See \code{from()}
-#' @param cc See \code{cc()}
-#' @param bcc See \code{bcc()}
-#' @param reply See \code{reply()}
-#' @param subject See \code{subject()}
-#' @param text See \code{text()}
-#' @param html See \code{html()}
+#' @param to See [to()].
+#' @param from See [from()].
+#' @param cc See [cc()].
+#' @param bcc See [bcc()].
+#' @param reply See [reply()].
+#' @param subject See [subject()].
+#' @param importance See [importance()].
+#' @param priority See [priority()].
+#' @param text See [text()].
+#' @param html See [html()].
 #'
 #' @return A message object.
-#' @seealso \code{\link{subject}}, \code{\link{from}}, \code{\link{to}}, \code{\link{cc}}, \code{\link{bcc}} and \code{\link{reply}}
+#' @seealso [subject()], [from()], [to()], [cc()], [bcc()] and [reply()].
 #' @export
 #' @examples
 #' # Create an (empty) message object.
+#' #
 #' msg <- envelope()
 #'
-#' # Create a complete message object.
+#' # Create a complete message object, specifying all available fields.
+#' #
 #' envelope(
 #'   to = "bob@gmail.com",
 #'   from = "craig@gmail.com",
 #'   cc = "alex@gmail.com",
 #'   bcc = "shannon@gmail.com",
 #'   reply = "craig@yahoo.com",
+#'   importance = "high",
+#'   priority = "urgent",
 #'   subject = "Hiya!",
 #'   text = "Hi Bob, how are you?"
 #' )
@@ -37,28 +80,16 @@ envelope <- function(
   bcc = NULL,
   reply = NULL,
   subject = NULL,
+  importance = NULL,
+  priority = NULL,
   text = NULL,
   html = NULL
 ) {
-  koevert <- structure(
-    list(
-      header = list(
-        Date = http_date(Sys.time())
-      ),
-      parts = NULL
-    ),
-    class="envelope")
+  new_envelope(to, from, cc, bcc, reply, subject, importance, priority, text, html)
+}
 
-  if (!is.null(to)) koevert <- to(koevert, to)
-  if (!is.null(from)) koevert <- from(koevert, from)
-  if (!is.null(cc)) koevert <- cc(koevert, cc)
-  if (!is.null(bcc)) koevert <- bcc(koevert, bcc)
-  if (!is.null(reply)) koevert <- reply(koevert, reply)
-  if (!is.null(subject)) koevert <- subject(koevert, subject)
-  if (!is.null(text)) koevert <- text(koevert, text)
-  if (!is.null(html)) koevert <- html(koevert, html)
-
-  koevert
+headers <- function(x) {
+  paste(sapply(x$headers, as.character), collapse = "\r\n")
 }
 
 #' Print a message object
@@ -68,7 +99,7 @@ envelope <- function(
 #'
 #' @param x A message object.
 #' @param details Whether or not to display full message content.
-#' @param ... Any other arguments (for consistency of generic function).
+#' @param ... Further arguments passed to or from other methods.
 #'
 #' @export
 #' @examples
@@ -83,35 +114,33 @@ print.envelope <- function(x, details = NA, ...) {
   if (is.na(details)) {
     details = get_option_details(default = FALSE)
   }
-  if (!is.logical(details)) stop("details must be Boolean.", call. = FALSE)
+  stopifnot(is.logical(details))
   #
-  ifelse(details, as.character(x), header(x)) %>% cat()
+  as.character(x, details = details) %>% cat("\n", sep = "")
 }
 
 #' Create formatted message.
 #'
 #' Accepts a message object and formats it as a MIME document.
 #'
-#' @param x A message object.
-#' @param ... Further arguments passed to or from other methods.
+#' @inheritParams print.envelope
 #' @export
 #'
 #' @return A formatted message object.
-as.character.envelope <- function(x, ...) {
-  CONTENT_TYPE = "multipart/related"
-
+as.character.envelope <- function(x, ..., details = TRUE) {
   message <- list(
-    header(x),
-    "MIME-Version:              1.0"
+    headers(x)
   )
 
   if (length(x$parts) > 1) {
     body <- multipart_mixed(children = x$parts)
   } else {
-    body <- x$parts[[1]]
+    body <- x$parts
   }
 
-  message <- c(message, as.character(body))
+  if (details) {
+    message <- c(message, as.character(body))
+  }
 
   do.call(paste0, c(list(message), collapse = "\r\n"))
 }
@@ -122,9 +151,9 @@ as.character.envelope <- function(x, ...) {
 #' @param child A child to be appended
 append.envelope <- function(x, child) {
   if(is.null(x$parts)) {
-    x$parts <- list(child)
+    x$parts <- child
   } else {
-    x$parts <- c(list(msg$parts), list(child))
+    x$parts <- c(list(x$parts), list(child))
   }
 
   x

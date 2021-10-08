@@ -60,7 +60,7 @@ MIME <- function(
   if (!all(class(children) == c("list"))) children <- list(children)
   # Check that all children are MIME.
   for (child in children) {
-    if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT, call. = FALSE)
+    if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT)
   }
 
   structure(
@@ -128,17 +128,45 @@ text_html <- function(
   charset = "utf-8",
   encoding = NA,
   squish = FALSE,
+  css = NA,
   ...
 ) {
   # Clean up content.
   #
   if (squish) {
-    content <- content %>%
-      str_replace_all("(^|(?<=>))[:space:]+($|(?=<))", "")
+    content <- html_squish(content)
+  }
+  content <- read_html(content)
+
+  if (length(css) && !all(is.na(css) | css == "")) {
+    css <- css %>%
+      unlist() %>%
+      str_c(collapse = "\n") %>%
+      css_remove_comment() %>%
+      str_squish()
+
+    # Add <head> (can be missing if rendering Plain Markdown).
+    if (is.na(xml_find_first(content, "//head"))) {
+      xml_add_sibling(
+        xml_find_first(content, "//body"),
+        "head",
+        .where = "before"
+      )
+    }
+
+    # Write consolidated CSS to single <style> tag.
+    if (nchar(css)) {
+      xml_add_child(
+        xml_find_first(content, "//head"),
+        "style",
+        css,
+        type = "text/css"
+      )
+    }
   }
 
-  # Remove empty lines.
-  content <- content %>% str_replace_all("(\n)+", "\n")
+  # Replace bare line-feeds.
+  content <- drape_linefeed(as.character(content))
 
   structure(
     c(
@@ -201,15 +229,9 @@ other <- function(
   }
   disposition <- glue('{disposition}; filename="{basename}"')
 
-  content <- base64encode(
-    read_bin(filename),
-    76L,
-    "\r\n"
-  )
-
   structure(
     c(
-      MIME(content, disposition, charset, encoding, boundary = NA, type = type, ...),
+      MIME(read_bin(filename), disposition, charset, encoding, boundary = NA, type = type, ...),
       list(
         cid = ifelse(is.na(cid), hexkey(), cid)
       )
@@ -218,20 +240,40 @@ other <- function(
   )
 }
 
-# APPEND ----------------------------------------------------------------------
+# APPEND & PREPEND ------------------------------------------------------------
 
-#' Append child to a MIME element
+#' Add children to MIME element
 #'
-#' This is a generic function.
+#' @name add_children
 #'
 #' @param x MIME element
 #' @param child Child MIME element
+#' @return A MIME element.
+#'
+#' @noRd
+NULL
+
+#' @rdname add_children
+#' @noRd
+#'
 append <- function(x, child) {
   UseMethod("append", x)
 }
 append.MIME <- function(x, child) {
-  if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT, call. = FALSE)
+  if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT)
   x$children <- c(x$children, list(child))
+  x
+}
+
+#' @rdname add_children
+#' @noRd
+#'
+prepend <- function(x, child) {
+  UseMethod("prepend", x)
+}
+prepend.MIME <- function(x, child) {
+  if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT)
+  x$children <- c(list(child), x$children)
   x
 }
 
@@ -243,43 +285,42 @@ append.MIME <- function(x, child) {
 #' @param ... Further arguments passed to or from other methods.
 as.character.MIME <- function(x, ...) {
   children <- sapply(x$children, function(child) {
-    paste(paste0("--", x$boundary), as.character.MIME(child), sep = "\n")
+    paste(paste0("--", x$boundary), as.character.MIME(child), sep = "\r\n")
   })
   type <- ifelse(!is.na(x$type), x$type, sub("_", "/", class(x)[1]))
   #
+  headers <- list(
+    content_type(type, x$charset, x$boundary),
+    content_disposition(x$disposition),
+    content_transfer_encoding(x$encoding),
+    x_attachment_id(x$cid),
+    content_id(x$cid)
+  )
+  #
+  content <- x$content
+  if (!is.na(x$encoding)) {
+    if (x$encoding == "base64") {
+      content <- mime_base64encode(content)
+    }
+
+    if (x$encoding %in% c("base64", "7bit")) {
+      headers <- c(headers, list(content_md5(x$content)))
+    }
+  }
+  #
   body <- c(
     # Head.
-    paste(
-      c(
-        glue('Content-Type:              {type}'),
-        if (!is.na(x$charset)) glue('charset={x$charset}') else NULL,
-        if (!is.na(x$boundary)) glue('boundary="{x$boundary}"') else NULL
-      ),
-      collapse = "; "
-    ),
-    if (!is.na(x$disposition)) {
-      glue('Content-Disposition:       {x$disposition}')
-    } else NULL,
-    if (!is.na(x$encoding)) {
-      glue('Content-Transfer-Encoding: {x$encoding}')
-    } else NULL,
-    if (!is.null(x$cid)) {
-      paste(
-        glue('X-Attachment-Id:           {x$cid}'),
-        glue('Content-ID:                <{x$cid}>'),
-        sep = "\n"
-      )
-    } else NULL,
+    headers %>% compact() %>% sapply(as.character),
     "",
     # Content (if any).
-    x$content,
+    content,
     # Children (if any).
     if(length(children)) children else NULL,
     # Foot.
     if (!is.na(x$boundary)) glue('--{x$boundary}--') else NULL
   )
 
-  paste(body, collapse = "\n")
+  paste(body, collapse = "\r\n")
 }
 
 # PRINT -----------------------------------------------------------------------
@@ -292,4 +333,23 @@ as.character.MIME <- function(x, ...) {
 #' @param ... Further arguments passed to or from other methods.
 print.MIME <- function(x, ...) {
   cat(as.character(x))
+}
+
+# LENGTH ----------------------------------------------------------------------
+
+#' Length of a MIME object
+#'
+#' The underlying object is a list, but we don't want the length of this
+#' object to be the length of the list.
+#'
+#' This is especially important for when we have a message that only consists
+#' of one MIME item. In that case we don't want it rendered as multipart/mixed.
+#'
+#' @noRd
+#'
+#' @param x A MIME object.
+#'
+#' @return The length of a MIME object (which is always one in units of MIME objects!).
+length.MIME <- function(x) {
+  1
 }

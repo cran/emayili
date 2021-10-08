@@ -7,8 +7,10 @@
 render(
   msg,
   input,
-  plain = FALSE,
-  include_css = TRUE,
+  params = NULL,
+  squish = TRUE,
+  css_files = c(),
+  include_css = c("rmd", "bootstrap", "highlight"),
   interpolate = TRUE,
   .open = "{{",
   .close = "}}",
@@ -20,9 +22,13 @@ render(
 
 \item{input}{The input Markdown file to be rendered or a character vector of Markdown text.}
 
-\item{plain}{Whether to treat the input as plain or R Markdown.}
+\item{params}{A list of named parameters that override custom parameters specified in the YAML front-matter.}
 
-\item{include_css}{Whether to include rendered CSS.}
+\item{squish}{Whether to clean up whitespace in rendered document.}
+
+\item{css_files}{Extra CSS files.}
+
+\item{include_css}{Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS; \code{"highlight"} — highlight.js CSS).}
 
 \item{interpolate}{Whether or not to interpolate into input using \link[glue]{glue}.}
 
@@ -37,7 +43,26 @@ A message object.
 }
 \description{
 Render either Plain Markdown or R Markdown directly into the body of an email.
+
+If \code{input} is a file then it will be interpreted as R Markdown it its
+extension is either \code{"Rmd"} or \code{"Rmarkdown"}. Otherwise it will be
+processed as Plain Markdown.
 }
+\section{Plain Markdown}{
+
+
+Plain Markdown is processed with \code{\link[commonmark:commonmark]{commonmark::markdown_html()}}.
+}
+
+\section{R Markdown}{
+
+
+R Markdown is processed with \code{\link[rmarkdown:render]{rmarkdown::render()}}.
+
+Regardless of what \code{output} type is specified in the input file,
+\code{render()} will always use the \code{"html_document"} output format.
+}
+
 \examples{
 
 # Plain Markdown
@@ -46,13 +71,13 @@ markdown <- "[This](https://www.google.com) is a link."
 filename <- "message.md"
 
 # Render from Markdown in character vector.
-msg <- envelope() \%>\% render(markdown, plain = TRUE)
+msg <- envelope() \%>\% render(markdown)
 
 # Create a file containing Markdown
 cat(markdown, file = filename)
 
 # Render from Markdown in file.
-msg <- envelope() \%>\% render(filename, plain = TRUE)
+msg <- envelope() \%>\% render(filename)
 
 # Cleanup.
 file.remove(filename)
@@ -69,8 +94,18 @@ rmarkdown::draft(
   edit = FALSE
 )
 
+# Check for suitable version of Pandoc (https://pandoc.org/).
+#
+# Need to have version 2.0 or greater to support required --quiet option.
+#
+pandoc <- rmarkdown::find_pandoc()
+suitable_pandoc <- !is.null(pandoc$dir) && grepl("^2", pandoc$version)
+
 # Render from Rmd file.
-msg <- envelope() \%>\% render(filename)
+if (suitable_pandoc) {
+  msg <- envelope() \%>\%
+    render(filename, include_css = c("rmd", "highlight"))
+}
 
 # Cleanup.
 file.remove(filename)
