@@ -3,7 +3,8 @@ manifest <- function(
   params = NULL,
   squish = TRUE,
   css,
-  include_css
+  include_css,
+  language
 ) {
   stopifnot(is.null(params) || is.list(params))
 
@@ -29,9 +30,7 @@ manifest <- function(
 
     output_format <- html_document(
       # Inline images don't work with GMail web client.
-      self_contained = FALSE,
-      # Silence pandoc warnings (mostly due to missing document title).
-      pandoc_args = "--quiet"
+      self_contained = FALSE
     )
 
     output_format$knitr$knit_hooks <- list(
@@ -154,7 +153,7 @@ manifest <- function(
     # Remove <meta> tag (a "Content-Type" <meta> inserted by {xml2}).
     str_replace("<meta[^>]*>", "")
 
-  output <- text_html(output, squish = squish, css = css)
+  output <- text_html(output, squish = squish, css = css, language = language)
 
   if (plain) {
     output
@@ -165,8 +164,8 @@ manifest <- function(
 
 # If {memoise} is installed then memoise manifest().
 #
-if (require(memoise, quietly = TRUE)) {
-  manifest <- memoise(manifest)
+if (requireNamespace("memoise", quietly = TRUE)) {
+  manifest <- memoise::memoise(manifest)
 }
 
 #' Render Markdown into email
@@ -199,6 +198,7 @@ if (require(memoise, quietly = TRUE)) {
 #' @param include_css Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS; \code{"highlight"} — highlight.js CSS).
 #'
 #' @return A message object.
+#' @seealso \code{\link{text}}, \code{\link{html}}
 #' @export
 #'
 #' @examples
@@ -254,6 +254,7 @@ render <- function(
   squish = TRUE,
   css_files = c(),
   include_css = c("rmd", "bootstrap", "highlight"),
+  language = FALSE,
   interpolate = TRUE,
   .open = "{{",
   .close = "}}",
@@ -311,7 +312,8 @@ render <- function(
     params,
     squish,
     list(extra = read_text(css_files)),
-    include_css
+    include_css,
+    language
   )
 
   msg <- append(msg, body)

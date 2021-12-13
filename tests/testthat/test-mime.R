@@ -46,7 +46,15 @@ test_that("squish", {
 test_that("header fields", {
   mime_txt <- other(TXTPATH, disposition = NA)
 
-  expect_match(as.character.MIME(mime_txt), "Content-Type:              text/plain; name=\"[^.]+\\.txt\"\r\nContent-Disposition:       inline; filename=\"[^.]+\\.txt\"\r\nContent-Transfer-Encoding: base64\r\nX-Attachment-Id:           .+\nContent-ID:                <[^>]+>\r\n")
+  expect_match(as.character.MIME(mime_txt), "Content-Type: +text/plain;[[:space:]]+name=\"[^.]+\\.txt\"\r\nContent-Disposition: +inline;[[:space:]]+filename=\"[^.]+\\.txt\"\r\nContent-Transfer-Encoding: +base64\r\nX-Attachment-Id: +.*\nContent-ID: +<[^>]+>\r\n")
+})
+
+test_that("valid encoding", {
+  expect_error(MIME(encoding = "klingon") %>% as.character.MIME())
+})
+
+test_that("length", {
+  expect_equal(length(MIME()), 1)
 })
 
 test_that("base64 encoding & MD5 checksum", {
@@ -58,8 +66,8 @@ test_that("base64 encoding & MD5 checksum", {
   )
   expect_match(
     as.character.MIME(mime_txt),
-    "Content-MD5:               7r/PnFfETLz0CFCESunVvA==",
-    fixed = TRUE
+    "Content-MD5: +7r/PnFfETLz0CFCESunVvA==",
+    fixed = FALSE
   )
 })
 
@@ -79,8 +87,7 @@ test_that("MD5 checksum", {
 
   expect_match(
     as.character.MIME(mime_jpg),
-    "Content-MD5:               0KTj0bnhRWCUK4N7LnvNmA==",
-    fixed = TRUE
+    "Content-MD5: +0KTj0bnhRWCUK4N7LnvNmA=="
   )
 })
 
@@ -93,4 +100,8 @@ test_that("order doesn't matter", {
     envelope() %>% attachment(TXTPATH) %>% text("Hello!") %>% as.character(),
     NA
   )
+})
+
+test_that("invalid hash algorithm", {
+  expect_error(multipart_signed(micalg = "pgp-sha0"))
 })

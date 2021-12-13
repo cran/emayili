@@ -2,6 +2,11 @@
 % Please edit documentation in R/server.R
 \name{server}
 \alias{server}
+\alias{gmail}
+\alias{sendgrid}
+\alias{mailgun}
+\alias{sendinblue}
+\alias{mailersend}
 \title{Create a SMTP server object.}
 \usage{
 server(
@@ -12,10 +17,21 @@ server(
   insecure = FALSE,
   reuse = TRUE,
   helo = NA,
+  protocol = NA,
   pause_base = 1,
   max_times = 5,
   ...
 )
+
+gmail(username, password, ...)
+
+sendgrid(password, ...)
+
+mailgun(username, password, ...)
+
+sendinblue(username, password, ...)
+
+mailersend(username, password, ...)
 }
 \arguments{
 \item{host}{DNS name or IP address of the SMTP server.}
@@ -24,13 +40,16 @@ server(
 
 \item{username}{Username for SMTP server.}
 
-\item{password}{Password for SMTP server.}
+\item{password}{Password for SMTP server or API key.}
 
 \item{insecure}{Whether to ignore SSL issues.}
 
 \item{reuse}{Whether the connection to the SMTP server should be left open for reuse.}
 
 \item{helo}{The HELO domain name of the sending host. If left as \code{NA} then will use local host name.}
+
+\item{protocol}{Which protocol (SMTP or SMTPS) to use for communicating with
+the server. Default will choose appropriate protocol based on port.}
 
 \item{pause_base}{Base delay (in seconds) for exponential backoff. See \link[purrr]{rate_backoff}.}
 
@@ -44,13 +63,50 @@ A function which is used to send messages to the server.
 \description{
 Create a SMTP server object.
 }
-\examples{
-library(magrittr)
+\section{Sendgrid}{
 
-# Set parameters for SMTP server (with username and password)
+
+To use SendGrid you'll need to first \href{https://docs.sendgrid.com/for-developers/sending-email/integrating-with-the-smtp-api}{create an API key}.
+Then use the API key as the password.
+
+SendGrid will accept messages on ports 25, 587 and 2525 (using SMTP) as well
+as 465 (using SMTPS).
+}
+
+\section{Mailgun}{
+
+
+To use Mailgun you'll need to first register a sender domain. This will then
+be assigned a username and password.
+
+Mailgun will accept messages on ports 25 and 587 (using SMTP) as well as 465
+(using SMTPS).
+}
+
+\section{Sendinblue}{
+
+
+To use Sendinblue you'll need to first create an account. You'll find your
+SMTP username and password in the SMTP & API section of your account
+settings.
+}
+
+\section{MailerSend}{
+
+
+To use MailerSend you'll need to first create an account. You'll find your
+SMTP username and password under Domains. See \href{https://www.mailersend.com/help/smtp-relay}{How to send emails via SMTP with MailerSend}.
+
+Although this is not likely to be a problem in practice, MailerSend insists
+that all messages have at minimum a valid subject and either text or HTML
+content.
+}
+
+\examples{
+# Set parameters for SMTP server (with username and password).
 smtp <- server(
   host = "smtp.gmail.com",
-  port = 465,
+  port = 587,
   username = "bob@gmail.com",
   password = "bd40ef6d4a9413de9c1318a65cbae5d7"
 )
@@ -84,4 +140,33 @@ smtp(msg, verbose = TRUE)
 #
 smtp <- server(host = "mail.example.com",
                helo = "client.example.com")
+
+# Set parameters for Gmail SMTP server. The host and port are implicit.
+smtp <- gmail(
+  username = "bob@gmail.com",
+  password = "bd40ef6d4a9413de9c1318a65cbae5d7"
+)
+
+# Set API key for SendGrid SMTP server.
+smtp <- sendgrid(
+  password = "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"
+)
+
+# Set username and password for Mailgun SMTP server.
+smtp <- mailgun(
+  username = "postmaster@sandbox9ptce35fdf0b31338dec4284eb7aaa59.mailgun.org",
+  password = "44d072e7g2b5f3bf23b2b642da0fe3a7-2ac825a1-a5be680a"
+)
+
+# Set username and password for Sendinblue SMTP server.
+smtp <- sendinblue(
+  username = "bob@gmail.com",
+  password = "xsmtpsib-c75cf91323adc53a1747c005447cbc9a893c35888635bb7bef1a624bf773da33"
+)
+
+# Set username and password for MailerSend SMTP server.
+smtp <- mailersend(
+  username = "NS_Pf3ALM@gmail.com",
+  password = "e5ATWLlTnWWDaKeE"
+)
 }

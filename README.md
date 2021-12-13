@@ -48,12 +48,19 @@ remotes::install_github("datawookie/emayili", ref = "dev")
 
 ## Usage
 
-First create a message object.
+Load the library.
 
 ``` r
 library(emayili)
-library(magrittr)
 
+packageVersion("emayili")
+```
+
+    [1] '0.7.0'
+
+Create a message object.
+
+``` r
 email <- envelope()
 ```
 
@@ -97,10 +104,24 @@ Add a subject.
 email <- email %>% subject("This is a plain text message!")
 ```
 
-Add a text body. You can use `html()` to add an HTML body.
+Add a text body.
 
 ``` r
 email <- email %>% text("Hello!")
+```
+
+You can use `html()` to add an HTML body. It accepts either a vector of
+characters or a `tagList()` from `{htmltools}`.
+
+``` r
+library(htmltools)
+
+email <- email %>% html(
+  tagList(
+    h2("Hello"),
+    p("World!")
+  )
+)
 ```
 
 Add an attachment.
@@ -126,13 +147,13 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
-    X-Mailer:                  {emayili}-0.6.1
-    MIME-Version:              1.0
-    From:                      alice@yahoo.com
-    To:                        bob@google.com
-    Cc:                        craig@google.com
-    Subject:                   This is a plain text message!
+    Date:                        Sun, 12 Dec 2021 15:09:23 GMT
+    X-Mailer:                    {emayili}-0.7.0
+    MIME-Version:                1.0
+    From:                        alice@yahoo.com
+    To:                          bob@google.com
+    Cc:                          craig@google.com
+    Subject:                     This is a plain text message!
 
 You can identify emails which have been sent using `{emayili}` by the
 presence of an `X-Mailer` header which includes both the package name
@@ -169,19 +190,21 @@ You can use `{glue}` syntax to interpolate content into the body of a
 message.
 
 ``` r
-name = "Alice"
+name <- "Alice"
 
 envelope() %>%
   text("Hello {{name}}!")
 ```
 
-    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
-    X-Mailer:                  {emayili}-0.6.1
-    MIME-Version:              1.0
-    Content-Type:              text/plain; charset=utf-8
-    Content-Disposition:       inline
-    Content-Transfer-Encoding: 7bit
-    Content-MD5:               nhjeY5ZYMzru+kSCGUzNKg==
+    Date:                        Sun, 12 Dec 2021 15:09:23 GMT
+    X-Mailer:                    {emayili}-0.7.0
+    MIME-Version:                1.0
+    Content-Type:                text/plain;
+                                  charset=utf-8;
+                                  format=flowed
+    Content-Disposition:         inline
+    Content-Transfer-Encoding:   7bit
+    Content-MD5:                 nhjeY5ZYMzru+kSCGUzNKg==
 
     Hello Alice!
 
@@ -199,11 +222,12 @@ envelope() %>%
   )
 ```
 
-    Date:                      Thu, 07 Oct 2021 13:37:35 GMT
-    X-Mailer:                  {emayili}-0.6.1
-    MIME-Version:              1.0
-    Content-Type:              text/html; charset=utf-8
-    Content-Disposition:       inline
+    Date:                        Sun, 12 Dec 2021 15:09:23 GMT
+    X-Mailer:                    {emayili}-0.7.0
+    MIME-Version:                1.0
+    Content-Type:                text/html;
+                                  charset=utf-8
+    Content-Disposition:         inline
 
     <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
     <html><body><p>Check out <a href="https://cran.r-project.org/package=emayili"><code>{emayili}</code></a>.</p></body></html>
@@ -305,10 +329,12 @@ email <- envelope() %>%
 Create a SMTP server object and send the message.
 
 ``` r
-smtp <- server(host = "smtp.gmail.com",
-               port = 465,
-               username = "bob@gmail.com",
-               password = "bd40ef6d4a9413de9c1318a65cbae5d7")
+smtp <- server(
+  host = "smtp.gmail.com",
+  port = 465,
+  username = "bob@gmail.com",
+  password = "bd40ef6d4a9413de9c1318a65cbae5d7"
+)
 smtp(email, verbose = TRUE)
 ```
 
@@ -323,12 +349,7 @@ print(email, details = TRUE)
 If you’re trying to send email with a host that uses the STARTTLS
 security protocol (like Google Mail, Yahoo! or AOL), then it will most
 probably be blocked due to insufficient security. In order to circumvent
-this, you can grant access to less secure apps. See the links below for
-specifics:
-
--   [Google](https://myaccount.google.com/security)
--   [Yahoo!](https://login.yahoo.com/account/security) and
--   [AOL](https://login.aol.com/account/security).
+this, you can grant access to less secure apps.
 
 ## Standards Documents
 

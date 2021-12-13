@@ -2,43 +2,6 @@ is.envelope <- function(x) {
   "envelope" %in% class(x)
 }
 
-new_envelope <- function(
-  to,
-  from,
-  cc,
-  bcc,
-  reply,
-  subject,
-  importance,
-  priority,
-  text,
-  html
-) {
-  koevert <- structure(
-    list(
-      headers = list(),
-      parts = NULL
-    ),
-    class="envelope"
-  ) %>%
-    header_set("Date", http_date(Sys.time()), append = FALSE) %>%
-    header_set("X-Mailer", paste("{emayili}", packageVersion("emayili"), sep = "-"), append = FALSE) %>%
-    header_set("MIME-Version", "1.0", append = FALSE)
-
-  if (!is.null(to)) koevert <- to(koevert, to)
-  if (!is.null(from)) koevert <- from(koevert, from)
-  if (!is.null(cc)) koevert <- cc(koevert, cc)
-  if (!is.null(bcc)) koevert <- bcc(koevert, bcc)
-  if (!is.null(reply)) koevert <- reply(koevert, reply)
-  if (!is.null(subject)) koevert <- subject(koevert, subject)
-  if (!is.null(importance)) koevert <- importance(koevert, importance)
-  if (!is.null(priority)) koevert <- priority(koevert, priority)
-  if (!is.null(text)) koevert <- text(koevert, text)
-  if (!is.null(html)) koevert <- html(koevert, html)
-
-  koevert
-}
-
 #' Create a message.
 #'
 #' @param to See [to()].
@@ -51,9 +14,14 @@ new_envelope <- function(
 #' @param priority See [priority()].
 #' @param text See [text()].
 #' @param html See [html()].
+#' @param encrypt Whether to encrypt the message. If \code{TRUE} then the entire
+#'   message will be encrypted using the private key of the sender.
+#' @param sign Whether to sign the message. If \code{TRUE} then the entire message will be signed using the private key of the sender.
+#' @param public_key Whether to attach a public key. If \code{TRUE} then the public key of the sender will be attached.
 #'
 #' @return A message object.
-#' @seealso [subject()], [from()], [to()], [cc()], [bcc()] and [reply()].
+#' @seealso [subject()], [from()], [to()], [cc()], [bcc()], [reply()] and
+#'   [encrypt()].
 #' @export
 #' @examples
 #' # Create an (empty) message object.
@@ -83,9 +51,37 @@ envelope <- function(
   importance = NULL,
   priority = NULL,
   text = NULL,
-  html = NULL
+  html = NULL,
+  encrypt = FALSE,
+  sign = FALSE,
+  public_key = FALSE
 ) {
-  new_envelope(to, from, cc, bcc, reply, subject, importance, priority, text, html)
+  koevert <- structure(
+    list(
+      headers = list(),
+      encrypt = encrypt,
+      sign = sign,
+      public_key = public_key,
+      parts = NULL
+    ),
+    class="envelope"
+  ) %>%
+    header_set("Date", http_date(Sys.time()), append = FALSE) %>%
+    header_set("X-Mailer", paste("{emayili}", packageVersion("emayili"), sep = "-"), append = FALSE) %>%
+    header_set("MIME-Version", "1.0", append = FALSE)
+
+  if (!is.null(to)) koevert <- to(koevert, to)
+  if (!is.null(from)) koevert <- from(koevert, from)
+  if (!is.null(cc)) koevert <- cc(koevert, cc)
+  if (!is.null(bcc)) koevert <- bcc(koevert, bcc)
+  if (!is.null(reply)) koevert <- reply(koevert, reply)
+  if (!is.null(subject)) koevert <- subject(koevert, subject)
+  if (!is.null(importance)) koevert <- importance(koevert, importance)
+  if (!is.null(priority)) koevert <- priority(koevert, priority)
+  if (!is.null(text)) koevert <- text(koevert, text)
+  if (!is.null(html)) koevert <- html(koevert, html)
+
+  koevert
 }
 
 headers <- function(x) {
@@ -135,8 +131,16 @@ as.character.envelope <- function(x, ..., details = TRUE) {
   if (length(x$parts) > 1) {
     body <- multipart_mixed(children = x$parts)
   } else {
-    body <- x$parts
+    body <- x$parts[[1]]
   }
+
+  body <- encrypt_body(
+    body,
+    parties(x),
+    encrypt = x$encrypt,
+    sign = x$sign,
+    public_key = x$public_key
+  )
 
   if (details) {
     message <- c(message, as.character(body))
@@ -151,9 +155,11 @@ as.character.envelope <- function(x, ..., details = TRUE) {
 #' @param child A child to be appended
 append.envelope <- function(x, child) {
   if(is.null(x$parts)) {
-    x$parts <- child
+    log_debug("Adding first child.")
+    x$parts <- list(child)
   } else {
-    x$parts <- c(list(x$parts), list(child))
+    log_debug("Adding subsequent child.")
+    x$parts <- c(x$parts, list(child))
   }
 
   x

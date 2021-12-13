@@ -5,11 +5,10 @@
 #' @param name Name to be used for attachment (defaults to base name of \code{path}).
 #' @param type MIME type or \cite{NA}, which will result in a guess based on file extension.
 #' @param cid Content-ID or \code{NA}.
+#' @param disposition How is attachment to be presented (\code{"inline"} or \code{"attachment"})?
 #' @return A message object.
 #' @export
 #' @examples
-#' library(magrittr)
-#'
 #' path_mtcars  <- tempfile(fileext = ".csv")
 #' path_scatter <- tempfile(fileext = ".png")
 #' path_cats    <- system.file("cats.jpg", package = "emayili")
@@ -27,11 +26,11 @@
 #'   attachment(path_scatter, cid = "scatter")
 #'
 #' file.remove(path_scatter, path_mtcars)
-attachment <- function(msg, path, name = NA, type = NA, cid = NA) {
+attachment <- function(msg, path, name = NA, type = NA, cid = NA, disposition = "attachment") {
   if (length(path) != 1)
     stop("Must be precisely one attachment.", call. = F)
 
-  body <- other(path, name, type, cid)
+  body <- other(path, name, type, cid, disposition)
 
   msg <- append(msg, body)
 

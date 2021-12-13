@@ -1,12 +1,12 @@
 #' @import curl
 #' @import digest
-#' @import stringr
 #' @import dplyr
-#' @import tidyr
-#' @import purrr
+#' @import htmltools
 #' @import logger
+#' @import purrr
+#' @import stringr
+#' @import tidyr
 #' @import xml2
-#' @importFrom htmltools tags
 #' @importFrom base64enc base64encode
 #' @importFrom commonmark markdown_html
 #' @importFrom glue glue
@@ -14,6 +14,7 @@
 #' @importFrom mime guess_type
 #' @importFrom rmarkdown render html_document
 #' @importFrom stats setNames
+#' @importFrom stringi stri_replace_all_fixed stri_replace_all_regex
 #' @importFrom tools file_ext
 #' @importFrom urltools url_decode
 #' @importFrom utils packageVersion
@@ -25,7 +26,11 @@ NULL
 globalVariables(
   c(
     ".",
+    "e1",
+    "e2",
+    "fingerprint",
     "msg",
-    "runif"
-    )
+    "runif",
+    "detect_language"
   )
+)

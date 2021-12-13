@@ -1,6 +1,6 @@
 test_that("envelope print() output", {
   msg <- envelope() %>% subject("Test message")
-  expect_output(print(msg), "Date:         .*\nSubject:                   Test message")
+  expect_output(print(msg), "Date: +.*\nSubject: +Test message")
 })
 
 test_that("class envelope", {
@@ -16,6 +16,11 @@ test_that("recipient address", {
 test_that("sender address", {
   sender <- envelope(from = "bob@gmail.com")
   expect_equal(sender$headers$From$values[[1]], address("bob@gmail.com"))
+})
+
+test_that("maximum one sender address", {
+  expect_error(envelope(from = c("bob@gmail.com", "anne@example.com")))
+  expect_error(envelope() %>% from(c("bob@gmail.com", "anne@example.com")))
 })
 
 test_that("cc", {
@@ -40,15 +45,23 @@ test_that("subject", {
 
 test_that("body text", {
   email_text <- envelope(text = "foo")
-  expect_equal(email_text$parts$content, "foo")
+  expect_equal(email_text$parts[[1]]$content, "foo")
 })
 
 test_that("body html", {
   html <- envelope(html = "<p>foo</p>")
-  expect_match(html$parts$content, "<body><p>foo</p></body>")
+  expect_match(html$parts[[1]]$content, "<body><p>foo</p></body>")
 })
 
 test_that("append another body", {
   msg <- envelope() %>% text("Hello!") %>% html("<p>Goodbye!</p>")
   expect_equal(length(msg$parts), 2)
+})
+
+test_that("parts are not nested", {
+  msg <- envelope() %>%
+    text("Hello!") %>%
+    html(HTMLPATH) %>%
+    attachment(JPGPATH)
+  expect_false(is.nested(msg$parts))
 })

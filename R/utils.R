@@ -2,7 +2,7 @@ REGEX_BARE_LINEFEED = "(?<!\r)\n"
 
 #' Pipe operator
 #'
-#' \link[magrittr]{%>%}
+#' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
 #'
 #' @name %>%
 #' @rdname pipe
@@ -10,6 +10,9 @@ REGEX_BARE_LINEFEED = "(?<!\r)\n"
 #' @export
 #' @importFrom magrittr %>%
 #' @usage lhs \%>\% rhs
+#' @param lhs A value or the magrittr placeholder.
+#' @param rhs A function call using the magrittr semantics.
+#' @return The result of calling `rhs(lhs)`.
 NULL
 
 # For adding elements to a list using %>%.
@@ -40,11 +43,12 @@ compare <- function(lhs, rhs) {
 #'             paths, in which case their content is concatenated.
 #'
 #' @return A character vector
-read_text <- function(path, collapse = "\n") {
-  map_chr(path, function(p) {
-    if (!file.exists(p)) stop("Unable to find file: ", p, ".")
-    readChar(p, file.info(p)$size)
+read_text <- function(path, encoding = "UTF-8", collapse = "\n") {
+  map(path, function(p) {
+    if (!file.exists(p)) stop("Unable to find file: ", p, ".", call. = FALSE)
+    readLines(p, encoding = encoding, warn = FALSE)
   }) %>%
+    unlist()%>%
     str_c(collapse = collapse)
 }
 
@@ -126,6 +130,19 @@ html_squish <- function(html) {
 }
 
 mime_base64encode <- function(raw, linewidth = 76L) {
+  if (!is.raw(raw)) {
+    if (tryCatch(file.exists(raw), error = function(e) FALSE)) {
+      log_debug("Assuming that input is a file.")
+    } else {
+      log_debug("Assuming that input is not a file.")
+      if (is.character(raw)) {
+        raw <- charToRaw(raw)
+      } else {
+        raw <- as.raw(raw)
+      }
+    }
+  }
+
   base64encode(
     raw,
     linewidth,
@@ -150,4 +167,62 @@ mime_base64encode <- function(raw, linewidth = 76L) {
 md5 <- function(object) {
   digest(object, algo = "md5", serialize = FALSE, raw = TRUE) %>%
     mime_base64encode()
+}
+
+parse_datetime <- function(datetime, tz) {
+  as.POSIXct(datetime, tz)
+}
+
+#' Format date
+#'
+#' Format like "Fri, 08 Oct 2021 22:06:39 -0700 (PDT)".
+#'
+#' @noRd
+format_datetime <- function(datetime) {
+  strftime(datetime, "%a, %d %b %Y %H:%M:%S %z (%Z)")
+}
+
+#' Enclose in angle brackets
+#'
+#' @noRd
+wrap_angle_brackets <- function(x) {
+  if (!grepl("^<", x)) x <- paste0("<", x)
+  if (!grepl(">$", x)) x <- paste0(x, ">")
+  x
+}
+
+#' Test if list is nested or flat
+#'
+#' @noRd
+#' @param x A list.
+#' @return A Boolean.
+is.nested <- function(x) {
+  stopifnot(is.list(x))
+  any(sapply(x, function(x) any(class(x) == "list")))
+}
+
+smtp_url <- function(host, port, protocol = NA, helo = NA) {
+  helo <- ifelse(is.na(helo), "", helo)
+
+  # Check if host includes protocol.
+  if (!grepl("^smtps?://", host)) {
+    if (is.na(protocol)) {
+      protocol <- ifelse(port == 465, "smtps", "smtp")
+    } else {
+      protocol <- tolower(protocol)
+      if (!grepl("^smtps?$", protocol)) {
+        stop("Invalid protocol: only SMTP and SMTPS are allowed.")
+      }
+    }
+    protocol <- paste0(protocol, "://")
+  } else {
+    protocol= ""
+  }
+
+  sprintf("%s%s:%d/%s", protocol, host, port, helo)
+}
+
+stop <- function(..., call. = FALSE, domain = NULL) {
+  txt <- glue::glue(...)
+  base::stop(txt, call. = call., domain = domain)
 }

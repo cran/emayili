@@ -1,15 +1,22 @@
 msg <- envelope() %>%
-  from(SMTP_USERNAME) %>%
-  to(SMTP_USERNAME)
+  from(EMAIL_FROM) %>%
+  to(EMAIL_TO)
 
 msg_no_recipient <- envelope() %>%
-  from(SMTP_USERNAME)
+  from(EMAIL_FROM)
 
 msg_no_sender <- envelope() %>%
-  to(SMTP_USERNAME)
+  to(EMAIL_TO)
 
 test_that("server type", {
   expect_type(smtp, "closure")
+  expect_type(smtp_sendgrid, "closure")
+  expect_type(smtp_mailgun, "closure")
+  expect_type(smtp_sendinblue, "closure")
+  expect_type(smtp_mailersend, "closure")
+
+  skip_if(suppressWarnings(is.na(smtp_gmail)))
+  expect_type(smtp_gmail, "closure")
 })
 
 test_that("error if sender missing", {
@@ -39,6 +46,7 @@ test_that("sends message with insecure = TRUE", {
 test_that("sends with SSL", {
   skip_on_cran()
   skip_on_ci()
+  skip_if(suppressWarnings(is.na(smtp_gmail)))
   expect_error(smtp_gmail(msg %>% subject("{emayili} test")), NA)
 })
 

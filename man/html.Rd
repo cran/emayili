@@ -11,6 +11,7 @@ html(
   charset = "utf-8",
   encoding = "quoted-printable",
   css_files = c(),
+  language = FALSE,
   interpolate = TRUE,
   .open = "{{",
   .close = "}}",
@@ -22,13 +23,22 @@ html(
 
 \item{content}{A string of message content.}
 
-\item{disposition}{How content is presented (Content-Disposition).}
+\item{disposition}{Should the content be displayed inline or as an
+attachment? Valid options are \code{"inline"} and \code{"attachment"}. If
+set to \code{NA} then will guess appropriate value.}
 
-\item{charset}{How content is encoded.}
+\item{charset}{What character set is used. Most often either \code{"UTF-8"}
+or \code{"ISO-8859-1"}.}
 
-\item{encoding}{How content is transformed to ASCII (Content-Transfer-Encoding).}
+\item{encoding}{How content is transformed to ASCII. Options are
+\code{"7bit"}, \code{"quoted-printable"} and \code{"base64"}. Use \code{NA}
+or \code{NULL} for no (or "identity") encoding.}
 
 \item{css_files}{Extra CSS files.}
+
+\item{language}{Langauge of content. If \code{FALSE} then will not include
+language field. If \code{TRUE} then will attempt to auto-detect language.
+Otherwise will use the specified language.}
 
 \item{interpolate}{Whether or not to interpolate into input using \link[glue]{glue}.}
 
@@ -45,8 +55,6 @@ A message object.
 Add an HTML body to a message object.
 }
 \examples{
-library(magrittr)
-
 # Inline HTML message.
 envelope() \%>\% html("<b>Hello!</b>")
 
@@ -54,7 +62,17 @@ envelope() \%>\% html("<b>Hello!</b>")
 htmlfile <- tempfile(fileext = ".html")
 cat("<p>Hello!</p>\n", file = htmlfile)
 envelope() \%>\% html(htmlfile)
+
+# You can pass a vector of character. Components will be separated by a
+# "\n".
+envelope() \%>\% html(c("<b>Hello</b>", "<p>World!</p>"))
+
+# You can also pass a tagList from {htmltools}.
+if (requireNamespace("htmltools", quietly = TRUE)) {
+  library(htmltools)
+  envelope() \%>\% html(tagList(h2("Hello"), p("World!")))
+}
 }
 \seealso{
-\code{\link{text}}
+\code{\link{text}}, \code{\link{render}}
 }
