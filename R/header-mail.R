@@ -1,5 +1,3 @@
-# Headers for the mail protocol.
-
 #' Add address fields to message
 #'
 #' @name addresses
@@ -10,9 +8,48 @@
 #' @return A message object.
 NULL
 
+#' Function factory for recipient functions
+#'
+#' Header records consist of key/value pairs.
+#'
+#' Coverage tests don't work as expected with factory functions.
+#'
+#' @param key Header key.
+#' @return A header function.
+#' @noRd
+recipient <- function(key, single = FALSE) {
+  force(key)                                                       # nocov start
+  force(single)
+
+  if (single) {
+    function(msg, addr = NULL, split = ", *") {
+      if (is.null(addr)) {
+        header_get(msg, key)
+      } else {
+        addr <- as.address(addr, split = split)
+        if (length(addr) > 1) stop("Only one address allowed.")
+        msg <- header_set(msg, key, addr, append = FALSE)
+        if (get_option_invisible()) invisible(msg) else msg
+      }
+    }
+  } else {
+    function(msg, ..., append = TRUE, split = ", *") {
+      addr <- list(...)
+      if (length(addr)) {
+        addr <- map(addr, as.address, split = split) %>% do.call(c, .)
+        msg <- header_set(msg, key, addr, append = append, sep = ",")
+        if (get_option_invisible()) invisible(msg) else msg
+      } else {
+        header_get(msg, key)
+      }
+    }
+  }                                                                # nocov end
+}
+
 #' @rdname addresses
 #'
 #' @param ... Addresses.
+#' @inheritParams as.address
 #'
 #' @export
 #' @examples
@@ -22,15 +59,7 @@ NULL
 #' msg %>% to("bob@gmail.com", "alice@yahoo.com")
 #' msg %>% to(c("bob@gmail.com", "alice@yahoo.com"))
 #'
-to <- function(msg, ..., append = TRUE) {
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    header_get(msg, "To")
-  } else {
-    msg <- header_set(msg, "To", as.address(arguments), append = append, sep = ", ")
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+to <- recipient("To")
 
 #' @rdname addresses
 #'
@@ -42,15 +71,7 @@ to <- function(msg, ..., append = TRUE) {
 #' msg %>% cc("bob@gmail.com", "alice@yahoo.com")
 #' msg %>% cc(c("bob@gmail.com", "alice@yahoo.com"))
 #'
-cc <- function(msg, ..., append = TRUE) {
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    header_get(msg, "Cc")
-  } else {
-    msg <- header_set(msg, "Cc", as.address(arguments), append = append, sep = ", ")
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+cc <- recipient("Cc")
 
 #' @rdname addresses
 #'
@@ -62,15 +83,7 @@ cc <- function(msg, ..., append = TRUE) {
 #' msg %>% bcc("bob@gmail.com", "alice@yahoo.com")
 #' msg %>% bcc(c("bob@gmail.com", "alice@yahoo.com"))
 #'
-bcc <- function(msg, ..., append = TRUE) {
-  arguments <- c(...)
-  if (is.null(arguments)) {
-    header_get(msg, "Bcc")
-  } else {
-    msg <- header_set(msg, "Bcc", as.address(arguments), append = append, sep = ", ")
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+bcc <- recipient("Bcc")
 
 #' @rdname addresses
 #'
@@ -81,16 +94,7 @@ bcc <- function(msg, ..., append = TRUE) {
 #' # Populating the From field.
 #' msg %>% from("craig@gmail.com")
 #'
-from <- function(msg, addr = NULL) {
-  if (is.null(addr)) {
-    header_get(msg, "From")
-  } else {
-    addr <- as.address(addr)
-    if (length(addr) > 1) stop("Only one sender address allowed.")
-    msg <- header_set(msg, "From", addr, append = FALSE)
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+from <- recipient("From", TRUE)
 
 #' @rdname addresses
 #'
@@ -100,14 +104,7 @@ from <- function(msg, addr = NULL) {
 #' msg <- envelope()
 #' msg %>% reply("gerry@gmail.com")
 #'
-reply <- function(msg, addr = NULL) {
-  if (is.null(addr)) {
-    header_get(msg, "Reply-To")
-  } else {
-    msg <- header_set(msg, "Reply-To", as.address(addr), append = FALSE)
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+reply <- recipient("Reply-To", TRUE)
 
 #' @rdname addresses
 #'
@@ -117,14 +114,7 @@ reply <- function(msg, addr = NULL) {
 #' msg <- envelope()
 #' msg %>% return_path("bounced-mail@devnull.org")
 #'
-return_path <- function(msg, addr = NULL) {
-  if (is.null(addr)) {
-    header_get(msg, "Return-Path")
-  } else {
-    msg <- header_set(msg, "Return-Path", as.address(addr), append = FALSE)
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+return_path <- recipient("Return-Path", TRUE)
 
 #' @rdname addresses
 #'
@@ -133,14 +123,7 @@ return_path <- function(msg, addr = NULL) {
 #' # Populating the Sender field.
 #' msg <- envelope()
 #' msg %>% sender("on_behalf_of@gmail.com")
-sender <- function(msg, addr = NULL) {
-  if (is.null(addr)) {
-    header_get(msg, "Sender")
-  } else {
-    msg <- header_set(msg, "Sender", as.address(addr), append = FALSE)
-    if (get_option_invisible()) invisible(msg) else msg # nocov
-  }
-}
+sender <- recipient("Sender", TRUE)
 
 #' Add or query subject of message.
 #'

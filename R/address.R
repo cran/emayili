@@ -73,38 +73,9 @@ compliant <- function(addr, error = FALSE) {
   }
 }
 
-#' Helper function for creating address objects
-#'
-#' @inheritParams address
-#'
-#' @return An \code{address} object, representing an email address.
-new_address <- function(
-  email = character(),
-  display = character(),
-  local = character(),
-  domain = character(),
-  normalise = TRUE
-) {
-  vec_assert(email, ptype = character())
-  vec_assert(display, ptype = character())
-  vec_assert(local, ptype = character())
-  vec_assert(domain, ptype = character())
-
-  email <- ifelse(!is.na(email), email, paste0(local, "@", domain))
-
-  if (normalise) {
-    email <- sanitise(email)
-    display <- str_squish(display)
-  }
-
-  new_rcrd(list(email = email, display = display), class = "vctrs_address")
-}
-
 #' Email Address
 #'
 #' Create an \code{address} object which represents an email address.
-#'
-#' Implemented as an \href{https://cran.r-project.org/package=vctrs/vignettes/s3-vector.html}{S3 vector class}.
 #'
 #' @param email Email address.
 #' @param display Display name.
@@ -118,10 +89,7 @@ new_address <- function(
 #' @examples
 #' address("gerry@gmail.com")
 #' address("gerry@gmail.com", "Gerald")
-#' address(
-#'   c("gerry@gmail.com", "alice@yahoo.com", "jim@aol.com"),
-#'   c("Gerald", "Alice", NA)
-#' )
+#' address("gerry@gmail.com", "Durrell, Gerald")
 address <- function(
   email = NA,
   display = NA,
@@ -142,31 +110,69 @@ address <- function(
     stop("Must specify domain with local.", call. = FALSE)
   }
 
-  # Cast email and display to character and recycle to same length.
-  #
-  # This operator could be done more cleanly using %<-% from {zeallot} but
-  # not doing that for the moment to avoid another dependency.
-  #
-  args <- do.call(
-    vec_recycle_common,
-    vec_cast_common(email, display, local, domain, .to = character())
-  ) %>%
-    setNames(c("email", "display", "local", "domain")) %>%
-    set("normalise", normalise)
+  email <- as.character(email)
+  display <- as.character(display)
+  local <- as.character(local)
+  domain <- as.character(domain)
 
-  do.call(new_address, args)
+  args <- possibly(data.frame, NULL)(
+    email,
+    display,
+    local,
+    domain
+  )
+  if (is.null(args)) stop("Unable to recycle arguments in a meaningful way.")
+
+  args <- args %>% mutate(
+    email = ifelse(is.na(email), paste0(local, "@", domain), email)
+  )
+
+  email = ifelse(is.na(email), paste0(local, "@", domain), email)
+
+  if (normalise) {
+    email = sanitise(email)
+    display = str_squish(display)
+  }
+
+  structure(
+    list(
+      email = email,
+      display = display
+    ),
+    class = "address"
+  )
+}
+
+#' Length of address object
+#'
+#' @param x An \code{address} object.
+#'
+#' @return A character vector.
+#' @export
+length.address <- function(x) {
+  length(x$email)
 }
 
 #' Encode email addresses in a common format
 #'
-#' @param x A vector of \code{address} objects.
+#' @param x An \code{address} object.
+#' @param quote Whether to quote display name (only relevant if display name is
+#'   given in "Last, First" format).
 #' @param ... Further arguments passed to or from other methods.
 #'
 #' @return A character vector.
 #' @export
-format.vctrs_address <- function(x, ...) {
-  email <- field(x, "email")
-  display <- field(x, "display")
+format.address <- function(x, quote = TRUE, ...) {
+  email <- x$email
+  display <- x$display
+
+  # If the display name includes a comma, then quote it.
+  #
+  display <- ifelse(
+    !is.na(display) & str_detect(display, ",") & quote,
+    paste0('"', display, '"'),
+    display
+  )
 
   fmt <- ifelse(is.na(display), email, glue("{display} <{email}>"))
   fmt[is.na(email)] <- NA
@@ -174,36 +180,18 @@ format.vctrs_address <- function(x, ...) {
   fmt
 }
 
-
-#' Display full type of vector
-#'
-#' Need to import the vec_ptype_full() generic.
-#'
-#' @noRd
-#' @export
-vec_ptype_full.vctrs_address <- function(x) {
-  "address"
-}
-
-#' Display abbreviated type of vector
-#'
-#' Need to import the vec_ptype_abbr() generic.
-#'
-#' @noRd
-#' @export
-vec_ptype_abbr.vctrs_address <- function(x) {
-  "addr"
-}
-
 #' Convert address object to character
 #'
-#' @param x  A vector of \code{address} objects.
+#' If display name is specifed as "Last, First" then the display name will be
+#' quoted.
+#'
+#' @param x  An \code{address} object.
 #' @param ... Further arguments passed to or from other methods.
 #'
 #' @return A character vector.
 #' @export
-as.character.vctrs_address <- function(x, ...) {
-  format(x, ...)
+as.character.address <- function(x, ...) {
+  format(x, TRUE, ...)
 }
 
 #' Compare address objects
@@ -216,7 +204,7 @@ as.character.vctrs_address <- function(x, ...) {
 #' @return A Boolean, \code{TRUE} if the \code{e1} address is the same as the
 #'   \code{e2} address (ignores the display name).
 #' @export
-Ops.vctrs_address <- function(e1, e2)
+Ops.address <- function(e1, e2)
 {
   if (!("address" %in% class(e1))) e1 <- as.address(e1)
   if (!("address" %in% class(e2))) e2 <- as.address(e2)
@@ -226,9 +214,12 @@ Ops.vctrs_address <- function(e1, e2)
 
 #' Create an address object
 #'
-#' @param addr An email address.
+#' This is capable of handling more than one address at a time.
 #'
-#' @return An \code{address} object.
+#' @param addr An email address.
+#' @param split Pattern for splitting multiple addresses.
+#'
+#' @return A list of \code{address} objects.
 #' @export
 #'
 #' @examples
@@ -236,14 +227,16 @@ Ops.vctrs_address <- function(e1, e2)
 #' as.address("Gerald <gerry@gmail.com>")
 #' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com", "jim@aol.com"))
 #' as.address("Gerald <gerry@gmail.com>, alice@yahoo.com, jim@aol.com")
-#' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com, jim@aol.com"))
-as.address <- function(addr) {
-  if ("vctrs_address" %in% class(addr)) {
+#' as.address("Durrell, Gerald <gerry@gmail.com>", FALSE)
+as.address <- function(addr, split = ", *") {
+  if ("address" %in% class(addr)) {
     addr
   } else {
-    # Check if multiple comma-separated addresses.
+    # Check if multiple addresses.
     #
-    addr <- str_split(addr, ", *") %>% unlist()
+    if (is.character(split)) {
+      addr <- str_split(addr, split) %>% unlist()
+    }
     #
     display <- ifelse(
       str_detect(addr, "[<>]"),
@@ -262,6 +255,9 @@ as.address <- function(addr) {
 
 #' Print an address object
 #'
+#' If display name is specifed as "Last, First" then the display name will be
+#' quoted.
+#'
 #' @param x An \code{address} object.
 #' @param ... Further arguments passed to or from other methods.
 #'
@@ -270,8 +266,34 @@ as.address <- function(addr) {
 #' @examples
 #' gerry <- as.address("gerry@gmail.com")
 #' print(gerry)
-print.vctrs_address <- function(x, ...) {
-  print(format(x))
+print.address <- function(x, ...) {
+  print(format(x, FALSE))
+}
+
+#' Concatenate address objects
+#'
+#' @param ... Address objects to be concatenated.
+#'
+#' @return An \code{address} object.
+#' @export
+#'
+#' @examples
+#' gerry <- as.address("Gerald <gerry@gmail.com>")
+#' alice <- address("alice@yahoo.com")
+#' jim <- address("jim@aol.com", "Jim")
+#' c(gerry, alice)
+#' c(gerry, c(alice, jim))
+c.address <- function(...) {
+  addr <- list(...)
+  email <- map(addr, ~ .$email) %>% do.call(c, .)
+  display <- map(addr, ~ .$display) %>% do.call(c, .)
+  structure(
+    list(
+      email = email,
+      display = display
+    ),
+    class = "address"
+  )
 }
 
 #' Extract raw email address
@@ -287,7 +309,7 @@ print.vctrs_address <- function(x, ...) {
 #' gerry <- as.address("Gerald <gerry@gmail.com>")
 #' raw(gerry)
 raw <- function(addr) {
-  field(addr, "email")
+  addr$email
 }
 
 #' Extract display name
@@ -303,7 +325,7 @@ raw <- function(addr) {
 #' gerry <- as.address("Gerald <gerry@gmail.com>")
 #' display(gerry)
 display <- function(addr) {
-  field(addr, "display")
+  addr$display
 }
 
 #' Extract local part of email address
@@ -316,8 +338,8 @@ display <- function(addr) {
 #' @examples
 #' local("alice@example.com")
 local <- function(addr) {
-  addr <- as.address(addr)
-  raw(addr) %>%
+  as.address(addr) %>%
+    raw() %>%
     str_remove("@.*$")
 }
 
@@ -331,7 +353,26 @@ local <- function(addr) {
 #' @examples
 #' domain("alice@example.com")
 domain <- function(addr) {
-  addr <- as.address(addr)
-  raw(addr) %>%
+  as.address(addr) %>%
+    raw() %>%
     str_remove("^.*@")
+}
+
+#' Split a compound address object
+#'
+#' @param addr An \code{address} object.
+#'
+#' @return A list of \code{address} objects, each of which contains only a single
+#'   address.
+#' @export
+#'
+#' @examples
+#' cleave(as.address(c("foo@yahoo.com", "bar@yahoo.com")))
+cleave <- function(addr) {
+  addr <- as.address(addr)
+
+  addr %>%
+    unclass() %>%
+    data.frame() %>%
+    pmap(function(email, display) address(email, display))
 }

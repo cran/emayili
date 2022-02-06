@@ -1,7 +1,28 @@
 test_that("children must be MIME", {
   expect_error(MIME(children = list(1)), ERROR_NOT_MIME_OBJECT)
-  expect_error(append.MIME(MIME(), 1), ERROR_NOT_MIME_OBJECT)
-  expect_error(prepend.MIME(MIME(), 1), ERROR_NOT_MIME_OBJECT)
+  expect_error(after(MIME(), 1), ERROR_NOT_MIME_OBJECT)
+  expect_error(before(MIME(), 1), ERROR_NOT_MIME_OBJECT)
+})
+
+test_that("(ap|pre)pend children", {
+  foo <- text_plain("foo")
+  bar <- text_plain("bar")
+
+  related <- MIME(children = foo)
+
+  expect_equal(
+    before(related, bar)$children[[1]]$content,
+    "bar"
+  )
+  expect_equal(
+    after(related, bar)$children[[2]]$content,
+    "bar"
+  )
+})
+
+test_that("length of MIME", {
+  mime <- MIME()
+  expect_equal(length(mime), 1)
 })
 
 test_that("create multipart/mixed", {
@@ -23,16 +44,6 @@ test_that("missing disposition", {
   expect_match(mime_jpg$disposition, "^attachment")
 })
 
-test_that("print", {
-  mime_txt <- emayili:::other(TXTPATH, disposition = NA)
-
-  expect_output(
-    print.MIME(mime_txt),
-    as.character.MIME(mime_txt) %>% str_replace_all("\r\n", "\n"),
-    fixed = TRUE
-  )
-})
-
 test_that("squish", {
   expect_match(
     text_html(
@@ -51,10 +62,6 @@ test_that("header fields", {
 
 test_that("valid encoding", {
   expect_error(MIME(encoding = "klingon") %>% as.character.MIME())
-})
-
-test_that("length", {
-  expect_equal(length(MIME()), 1)
 })
 
 test_that("base64 encoding & MD5 checksum", {

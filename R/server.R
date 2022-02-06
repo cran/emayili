@@ -1,5 +1,9 @@
 #' Create a SMTP server object.
 #'
+#' Create an object which can be used to send messages to an SMTP server.
+#'
+#' These functions return a function which can then be called with a message object.
+#'
 #' @name server
 #'
 #' @param host DNS name or IP address of the SMTP server.
@@ -11,6 +15,7 @@
 #' @param helo The HELO domain name of the sending host. If left as \code{NA} then will use local host name.
 #' @param protocol Which protocol (SMTP or SMTPS) to use for communicating with
 #'   the server. Default will choose appropriate protocol based on port.
+#' @param test Test login to server.
 #' @param max_times Maximum number of times to retry.
 #' @param pause_base Base delay (in seconds) for exponential backoff. See \link[purrr]{rate_backoff}.
 #' @param ... Additional curl options. See \code{curl::curl_options()} for a list of supported options.
@@ -64,9 +69,77 @@ server <- function(
   reuse = TRUE,
   helo = NA,
   protocol = NA,
+  test = FALSE,
   pause_base = 1,
   max_times = 5,
   ...) {
+  # See curl::curl_options() for available options.
+  #
+  # * SSL
+  #
+  # - If you get the "The certificate chain was issued by an authority that is not trusted." error then
+  #   can add in ssl_verifypeer = FALSE.
+  # - Other flags:
+  #
+  #   - ssl_verifyhost
+  #   - ssl_verifypeer
+  #   - ssl_verifystatus
+  #
+  #   Run curl_options('ssl') to see other options.
+  #
+  if (insecure) {
+    ssl_verifypeer = FALSE
+  } else {
+    ssl_verifypeer = TRUE
+  }
+
+  port <- as.integer(port)
+  if (port %in% c(465, 587)) {
+    use_ssl = 1
+  } else {
+    use_ssl = 0
+  }
+
+  # Create an insistent version of send_mail().
+  #
+  # This is to mitigate occasional curl_fetch_memory() errors.
+  #
+  if (max_times > 1) {
+    send_mail <- insistently(
+      send_mail,
+      rate = rate_backoff(
+        max_times = max_times,
+        pause_base = pause_base,
+        pause_cap = pause_base * 2**max_times,
+        jitter = FALSE
+      )
+    )
+  }
+
+  smtp_server <- smtp_url(host, port, protocol, helo)
+
+  if (test) {
+    log_debug("Check login to {smtp_server}.")
+
+    response <- safely(send_mail)(
+      c(),
+      c(),
+      message = "",
+      smtp_server = smtp_server,
+      use_ssl = use_ssl,
+      username = username,
+      password = password,
+      verbose = FALSE
+    )
+
+    if (!is.null(response$error)) {
+      log_error("Login denied.")
+      stop(response$error$message)
+    } else {
+      log_debug("Login successful.")
+    }
+  }
+
   function(msg, verbose = FALSE) {
     debugfunction <- if (verbose) function(type, msg) cat(readBin(msg, character()), file = stderr()) # nocov
 
@@ -76,53 +149,8 @@ server <- function(
     #
     if (length(recipients) < 1) stop("Must specify at least one email recipient.")
 
-    # See curl::curl_options() for available options.
-    #
-    # * SSL
-    #
-    # - If you get the "The certificate chain was issued by an authority that is not trusted." error then
-    #   can add in ssl_verifypeer = FALSE.
-    # - Other flags:
-    #
-    #   - ssl_verifyhost
-    #   - ssl_verifypeer
-    #   - ssl_verifystatus
-    #
-    #   Run curl_options('ssl') to see other options.
-    #
-    if (insecure) {
-      ssl_verifypeer = FALSE
-    } else {
-      ssl_verifypeer = TRUE
-    }
-
-    port <- as.integer(port)
-    if (port %in% c(465, 587)) {
-      use_ssl = 1
-    } else {
-      use_ssl = 0
-    }
-
-    smtp_server <- smtp_url(host, port, protocol, helo)
-    #
     if (verbose) {
-      log_debug("Sending email to ", smtp_server, ".")
-    }
-
-    # Create an insistent version of send_mail().
-    #
-    # This is to mitigate occasional curl_fetch_memory() errors.
-    #
-    if (max_times > 1) {
-      send_mail <- insistently(
-        send_mail,
-        rate = rate_backoff(
-          max_times = max_times,
-          pause_base = pause_base,
-          pause_cap = pause_base * 2**max_times,
-          jitter = FALSE
-        )
-      )
+      log_debug("Sending email to {smtp_server}.")
     }
 
     result <- send_mail(
@@ -148,6 +176,15 @@ server <- function(
 }
 
 #' @rdname server
+#'
+#' @section Gmail:
+#'
+#' If you're having trouble authenticating with Gmail then you should try the following:
+#'
+#' - enable 2-factor authentication and
+#' - create an app password.
+#'
+#' Then use the app password rather than your usual account password.
 #'
 #' @export
 #'
@@ -295,6 +332,29 @@ mailersend <- function(
   fcall[[1]] <- server
   fcall$host = "smtp.mailersend.net"
   fcall$port = 587
+
+  eval(fcall, parent.frame())
+}
+
+#' @rdname server
+#'
+#' @section SMTP Bucket:
+#'
+#' SMTP Bucket is a fake SMTP server that captures all the messages it receives
+#' and makes them available through a website or REST API.
+#'
+#' @export
+#'
+#' @examples
+#'
+#' # SMTP Bucket server.
+#' smtp <- smtpbucket()
+smtpbucket <- function(...) {
+  fcall <- match.call(expand.dots = TRUE)
+
+  fcall[[1]] <- server
+  fcall$host = "mail.smtpbucket.com"
+  fcall$port = 8025
 
   eval(fcall, parent.frame())
 }

@@ -1,4 +1,5 @@
 manifest <- function(
+  msg,
   markdown,
   params = NULL,
   squish = TRUE,
@@ -17,6 +18,7 @@ manifest <- function(
     # files (like CSV) using a relative path.
     #
     input <- tempfile(fileext = ".Rmd", tmpdir = getwd())
+    output <- sub("\\.Rmd", ".html", input)
 
     # Clean up rendered artefacts.
     #
@@ -25,12 +27,10 @@ manifest <- function(
     # Write input to file.
     cat(markdown, file = input)
 
-    output <- sub("\\.Rmd", ".html", input)
-    image_path <- file.path(sub("\\.Rmd", "_files", input), "figure-html")
-
     output_format <- html_document(
-      # Inline images don't work with GMail web client.
-      self_contained = FALSE
+      self_contained = TRUE,
+      # Silence pandoc warnings (mostly due to missing document title).
+      pandoc_args = "--quiet"
     )
 
     output_format$knitr$knit_hooks <- list(
@@ -69,97 +69,35 @@ manifest <- function(
 
     # Read output from file.
     output <- read_html(output)
-
-    # Extract CSS from <link> and <style> tags and append.
-    #
-    css <- c(
-      # * Inline CSS in <link> tags.
-      if (any("rmd" == include_css)) {
-        inline = xml_find_all(output, "//link[starts-with(@href,'data:text/css')]") %>%
-          xml_attr("href") %>%
-          unlist() %>%
-          url_decode() %>%
-          str_replace("data:text/css,", "")
-      } else NULL,
-      # * External CSS in <link> tags.
-      #
-      # This is CSS for:
-      #
-      # - Bootstrap and
-      # - highlight.js.
-      #
-      external = xml_find_all(output, "//link[not(starts-with(@href,'data:text/css'))]") %>%
-        xml_attr("href") %>%
-        map(function(path) {
-          include_css <- setdiff(include_css, "rmd")
-          # Check is CSS path matches one of the requested options.
-          if (length(include_css)) {
-            if (str_detect(path, paste0("/", include_css, collapse = "|"))) path else NULL
-          } else NULL
-        }) %>%
-        unlist() %>%
-        file.path(dirname(input), .) %>%
-        map_chr(read_text),
-      # * Inline CSS in <style> tags.
-      if (any("rmd" == include_css)) {
-        style = xml_find_all(output, "//style") %>%
-          xml_text() %>%
-          unlist()
-      } else NULL,
-      # * Add custom CSS rules last so that it overrides preceding rules.
-      css
-    )
-
-    # Delete <script>, <link>, <style> and <meta> tags.
-    #
-    xml_find_all(output, "//script | //link | //style | //meta") %>% xml_remove()
-
-    # Remove comments.
-    #
-    xml_find_all(output, "//comment()") %>% xml_remove()
-
-    # Convert image links into CID references.
-    #
-    for (img in xml_find_all(output, "//img")) {
-      src <- xml_attr(img, "src")
-      # Check for Base64 encoded inline image.
-      if (!str_detect(src, "^data:image")) {
-        xml_attr(img, "src") <- paste0('cid:', hexkey(basename(src)))
-      }
-    }
-
-    body <- multipart_related()
-
-    # Attach images with appropriate CID.
-    #
-    for (image in list.files(image_path, full.names = TRUE)) {
-      body <- append(
-        body,
-        other(
-          filename = image,
-          cid = hexkey(basename(image)),
-          disposition = "inline"
-        )
-      )
-    }
   }
 
-  # Remove all other tags in <head>
-  xml_find_all(output, "//head/*") %>% xml_remove()
-
-  output <- as.character(output) %>%
-    # Remove <!DOCTYPE> tag.
-    str_replace("[:space:]*<!DOCTYPE html>[:space:]*", "") %>%
-    # Remove <meta> tag (a "Content-Type" <meta> inserted by {xml2}).
-    str_replace("<meta[^>]*>", "")
-
-  output <- text_html(output, squish = squish, css = css, language = language)
-
-  if (plain) {
-    output
+  # Decide what sources of CSS to retain.
+  #
+  # * Inline CSS in <link> tags.
+  if (any("rmd" == include_css)) {
+    log_debug("- Retain CSS from inline <link> tags.")
   } else {
-    prepend(body, output)
+    log_debug("- Remove CSS from inline <link> tags.")
+    xml_remove(xml_find_all(output, "//link[starts-with(@href,'data:text/css')]"))
   }
+  #
+  # * External CSS in <link> tags.
+  # - Doesn't apply to Plain Markdown.
+  log_debug("- Remove CSS from external <link> tags.")
+  xml_remove(xml_find_all(output, "//link[not(starts-with(@href,'data:text/css'))]"))
+  #
+  # * Inline CSS in <style> tags.
+  if (any("rmd" == include_css)) {
+    log_debug("- Retain inline <style>.")
+  } else {
+    log_debug("- Remove inline <style>.")
+    xml_remove(xml_find_all(output, "//style"))
+  }
+
+  css_file <- tempfile(fileext = ".css")
+  cat(paste(css, collapse = "\n"), file = css_file)
+
+  attach_images(msg, output, disposition = "inline", charset = "utf-8", encoding = NA, css_file, language)
 }
 
 # If {memoise} is installed then memoise manifest().
@@ -195,7 +133,7 @@ if (requireNamespace("memoise", quietly = TRUE)) {
 #' @param input The input Markdown file to be rendered or a character vector of Markdown text.
 #' @param params A list of named parameters that override custom parameters specified in the YAML front-matter.
 #' @param squish Whether to clean up whitespace in rendered document.
-#' @param include_css Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS; \code{"highlight"} — highlight.js CSS).
+#' @param include_css Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS).
 #'
 #' @return A message object.
 #' @seealso \code{\link{text}}, \code{\link{html}}
@@ -242,7 +180,7 @@ if (requireNamespace("memoise", quietly = TRUE)) {
 #' # Render from Rmd file.
 #' if (suitable_pandoc) {
 #'   msg <- envelope() %>%
-#'     render(filename, include_css = c("rmd", "highlight"))
+#'     render(filename, include_css = c("rmd", "bootstrap"))
 #' }
 #'
 #' # Cleanup.
@@ -253,7 +191,7 @@ render <- function(
   params = NULL,
   squish = TRUE,
   css_files = c(),
-  include_css = c("rmd", "bootstrap", "highlight"),
+  include_css = c("rmd", "bootstrap"),
   language = FALSE,
   interpolate = TRUE,
   .open = "{{",
@@ -266,23 +204,25 @@ render <- function(
   stopifnot(is.character(.close))
   stopifnot(!length(css_files) || is.character(css_files))
 
+  # What are permissible options for include_css?
   INCLUDE_CSS_OPTIONS <- eval(formals(render)$include_css)
 
   # Translate Boolean include_css:
   #
   # TRUE  - all CSS
-  # FALSE - no CSS).
+  # FALSE - no CSS
   #
   if (is.logical(include_css) && length(include_css) == 1) {
     include_css <- if(include_css) INCLUDE_CSS_OPTIONS else NULL
   }
 
+  # Check for include_css options that are not available.
   if (length(setdiff(include_css, INCLUDE_CSS_OPTIONS)) > 0) {
     stop(
       "Valid options for include_css are: ",
       paste(INCLUDE_CSS_OPTIONS, collapse = ", "),
       "."
-      )
+    )
   }
 
   if (is.null(.envir)) .envir = parent.frame()
@@ -307,16 +247,15 @@ render <- function(
 
   attr(markdown, "plain") <- plain
 
-  body <- manifest(
+  msg <- manifest(
+    msg,
     markdown,
     params,
     squish,
-    list(extra = read_text(css_files)),
+    css = list(extra = read_text(css_files)),
     include_css,
     language
   )
-
-  msg <- append(msg, body)
 
   if (get_option_invisible()) invisible(msg) else msg # nocov
 }

@@ -14,9 +14,32 @@ test_that("server type", {
   expect_type(smtp_mailgun, "closure")
   expect_type(smtp_sendinblue, "closure")
   expect_type(smtp_mailersend, "closure")
+  expect_type(smtp_smtpbucket, "closure")
 
   skip_if(suppressWarnings(is.na(smtp_gmail)))
   expect_type(smtp_gmail, "closure")
+})
+
+test_that("test server connection", {
+  skip_if(suppressWarnings(is.na(smtp_gmail)))
+
+  expect_type(
+    gmail(
+      username = SMTP_USERNAME_GMAIL,
+      password = SMTP_PASSWORD_GMAIL,
+      test = TRUE
+    ),
+    "closure"
+  )
+  expect_error(
+    gmail(
+      username = SMTP_USERNAME_GMAIL,
+      password = NULL,
+      test = TRUE,
+      max_times = 1
+    ),
+    "Login denied"
+  )
 })
 
 test_that("error if sender missing", {

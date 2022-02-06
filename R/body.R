@@ -57,39 +57,9 @@ text <- function(
 
   body <- text_plain(content, disposition, charset, encoding, language)
 
-  msg <- append(msg, body)
+  msg <- after(msg, body)
 
   if (get_option_invisible()) invisible(msg) else msg # nocov
-}
-
-#' Transform a (tag)list to a character string
-#'
-#' @param content Element to transform.
-#'
-#' @return If the content is a list, a tagList or a tag,
-#'     a character vector. Otherwise, it will return the
-#'     input unchanged.
-#'
-#' @noRd
-#' @examples
-#' list_to_char(list("<b>Hello</b>", "<p>World!</p>"))
-#' library(htmltools)
-#' list_to_char(tagList(h2("Hello"), p("World!")))
-list_to_char <- function(content) {
-  if (
-    # We do the change if the element is a
-    # tag or a tag.list
-    inherits(content, "shiny.tag.list") |
-    inherits(content, "shiny.tag")
-  ) {
-    content <- as.character(content)
-  }
-  # Then if we have a list, we collapse it to
-  # a character vector
-  if (length(content) > 1) {
-    content <- paste(content, collapse = "\n")
-  }
-  content
 }
 
 #' Add an HTML body to a message object.
@@ -122,7 +92,7 @@ html <- function(
   content,
   disposition = "inline",
   charset = "utf-8",
-  encoding = "quoted-printable",
+  encoding = NA,
   css_files = c(),
   language = FALSE,
   interpolate = TRUE,
@@ -146,13 +116,12 @@ html <- function(
 
   if (interpolate) content <- glue(content, .open = .open, .close = .close, .envir = .envir)
 
-  body <- text_html(
-    content, disposition, charset, encoding,
-    css = read_text(css_files),
-    language = language
-  )
+  content <- possibly(read_html, otherwise = NULL)(content)
+  if (is.null(content)) {
+    stop("Unable to find HTML file. Did you mean to provide verbatim HTML? Are you missing tags?")
+  }
 
-  msg <- append(msg, body)
+  msg <- attach_images(msg, content, disposition, charset, encoding, css_files, language)
 
   if (get_option_invisible()) invisible(msg) else msg # nocov
 }

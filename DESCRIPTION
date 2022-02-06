@@ -1,7 +1,7 @@
 Type: Package
 Package: emayili
 Title: Send Email Messages
-Version: 0.7.0
+Version: 0.7.5
 Authors@R: 
     c(person(given = c("Andrew", "B."),
              family = "Collier",
@@ -44,8 +44,8 @@ License: GPL-3
 Language: en-GB
 Imports: base64enc, commonmark, curl (>= 4.0), digest, dplyr, glue,
         htmltools, httr, logger, magrittr, mime, purrr, rmarkdown,
-        stringi, stringr, tidyr, urltools, vctrs, xfun, xml2
-Suggests: cld2, cld3, gpg, here, memoise, testthat (>= 2.1.0),
+        rvest, stringi, stringr, tidyr, urltools, xfun, xml2
+Suggests: cld2, cld3, gpg, here, jinjar, memoise, testthat (>= 2.1.0),
         roxygen2, showtext, Microsoft365R
 SystemRequirements: The function render() requires Pandoc
         (http://pandoc.org). To use PGP/GnuPG encryption requires gpg.
@@ -53,7 +53,7 @@ Encoding: UTF-8
 RoxygenNote: 7.1.2
 KeepSource: true
 NeedsCompilation: no
-Packaged: 2021-12-12 15:39:07 UTC; wookie
+Packaged: 2022-02-06 07:31:25 UTC; wookie
 Author: Andrew B. Collier [aut, cre, cph],
   Matt Dennis [ctb],
   Antoine Bichat [ctb] (<https://orcid.org/0000-0001-6599-7081>),
@@ -64,4 +64,4 @@ Author: Andrew B. Collier [aut, cre, cph],
   Colin Fay [ctb] (<https://orcid.org/0000-0001-7343-1846>)
 Maintainer: Andrew B. Collier <andrew@fathomdata.dev>
 Repository: CRAN
-Date/Publication: 2021-12-13 09:30:09 UTC
+Date/Publication: 2022-02-06 07:50:02 UTC

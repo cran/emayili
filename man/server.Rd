@@ -7,6 +7,7 @@
 \alias{mailgun}
 \alias{sendinblue}
 \alias{mailersend}
+\alias{smtpbucket}
 \title{Create a SMTP server object.}
 \usage{
 server(
@@ -18,6 +19,7 @@ server(
   reuse = TRUE,
   helo = NA,
   protocol = NA,
+  test = FALSE,
   pause_base = 1,
   max_times = 5,
   ...
@@ -32,6 +34,8 @@ mailgun(username, password, ...)
 sendinblue(username, password, ...)
 
 mailersend(username, password, ...)
+
+smtpbucket(...)
 }
 \arguments{
 \item{host}{DNS name or IP address of the SMTP server.}
@@ -51,6 +55,8 @@ mailersend(username, password, ...)
 \item{protocol}{Which protocol (SMTP or SMTPS) to use for communicating with
 the server. Default will choose appropriate protocol based on port.}
 
+\item{test}{Test login to server.}
+
 \item{pause_base}{Base delay (in seconds) for exponential backoff. See \link[purrr]{rate_backoff}.}
 
 \item{max_times}{Maximum number of times to retry.}
@@ -61,8 +67,23 @@ the server. Default will choose appropriate protocol based on port.}
 A function which is used to send messages to the server.
 }
 \description{
-Create a SMTP server object.
+Create an object which can be used to send messages to an SMTP server.
 }
+\details{
+These functions return a function which can then be called with a message object.
+}
+\section{Gmail}{
+
+
+If you're having trouble authenticating with Gmail then you should try the following:
+\itemize{
+\item enable 2-factor authentication and
+\item create an app password.
+}
+
+Then use the app password rather than your usual account password.
+}
+
 \section{Sendgrid}{
 
 
@@ -100,6 +121,13 @@ SMTP username and password under Domains. See \href{https://www.mailersend.com/h
 Although this is not likely to be a problem in practice, MailerSend insists
 that all messages have at minimum a valid subject and either text or HTML
 content.
+}
+
+\section{SMTP Bucket}{
+
+
+SMTP Bucket is a fake SMTP server that captures all the messages it receives
+and makes them available through a website or REST API.
 }
 
 \examples{
@@ -169,4 +197,7 @@ smtp <- mailersend(
   username = "NS_Pf3ALM@gmail.com",
   password = "e5ATWLlTnWWDaKeE"
 )
+
+# SMTP Bucket server.
+smtp <- smtpbucket()
 }

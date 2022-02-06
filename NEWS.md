@@ -1,3 +1,31 @@
+# {emayili} 0.7.5
+
+* More robust handling of addresses.
+* Tweak indenting in headers.
+* Quote display name differently for as.character() and print().
+* Cater for "Last, First" in to(), cc() and bcc().
+
+# {emayili} 0.7.4
+
+* Render self-contained HTML from R Markdown.
+* Add a Shiny demo app.
+* Streamlined handling of CSS in HTML messages.
+* Message templates.
+
+# {emayili} 0.7.3
+
+* Don't require recipient address or recipient keys for signing.
+* Refactor code for attaching images (consolidate for HTML body and rendered).
+
+# {emayili} 0.7.2
+
+* Add `smtpbucket()` which makes it easy to use SMTP Bucket for testing.
+* Images in HTML messages are converted into attachments with CID.
+
+# {emayili} 0.7.1
+
+* Fix encoding of non-ASCII characters in MIME headers.
+
 # {emayili} 0.7.0
 
 * Added full support for GPG signed and encrypted messages. (issue #84)

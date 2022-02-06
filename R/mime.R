@@ -121,6 +121,16 @@ multipart_related <- function(...) {
   )
 }
 
+multipart_alternative <- function(...) {
+  structure(
+    c(
+      MIME(...),
+      list()
+    ),
+    class = c("multipart_alternative", "MIME")
+  )
+}
+
 multipart_mixed <- function(...) {
   structure(
     c(
@@ -290,6 +300,8 @@ text_plain <- function(
 #' @noRd
 #'
 #' @inheritParams MIME
+#' @param content An \code{xml_document} object. Will try to coerce to
+#'   \code{xml_document} object
 #' @param squish Whether to remove whitespace outside of tags.
 #' @param ... Further arguments passed to or from other methods.
 #'
@@ -303,22 +315,38 @@ text_html <- function(
   css = NA,
   ...
 ) {
-  # Clean up content.
-  #
-  if (squish) {
-    content <- html_squish(content)
+  if (!("xml_document" %in% class(content))) {
+    content <- read_html(content)
   }
-  content <- read_html(content)
+
+  # - Extract CSS from message.
+  # - Add custom CSS rules last so that they overrides preceding rules.
+  css <- c(css_inline(content), css)
+
+  # Clean up HTML content.
+  #
+  # - Delete <script>, <link>, <style> and <meta> tags. There might be multiple
+  #   <style> tags in the original document. Remove all of those and then add
+  #   back a single consolidated <style> tag.
+  log_debug("- Remove various tags.")
+  xml_find_all(content, "//script | //meta | //link | //style") %>% xml_remove()
+  # - Remove comments.
+  log_debug("- Remove comments.")
+  xml_find_all(content, "//comment()") %>% xml_remove()
 
   if (length(css) && !all(is.na(css) | css == "")) {
+    log_debug("- Consolidate CSS.")
+
     css <- css %>%
       unlist() %>%
+      na.omit() %>%
       str_c(collapse = "\n") %>%
       css_remove_comment() %>%
       str_squish()
 
     # Add <head> (can be missing if rendering Plain Markdown).
     if (is.na(xml_find_first(content, "//head"))) {
+      log_debug("- Add <head>.")
       xml_add_sibling(
         xml_find_first(content, "//body"),
         "head",
@@ -327,7 +355,7 @@ text_html <- function(
     }
 
     # Write consolidated CSS to single <style> tag.
-    if (nchar(css)) {
+    if (!is.na(css) && nchar(css)) {
       xml_add_child(
         xml_find_first(content, "//head"),
         "style",
@@ -337,8 +365,23 @@ text_html <- function(
     }
   }
 
+  # Convert from xml_document to string.
+  #
+  content <- as.character(content)
+
+  # Clean up content.
+  if (squish) {
+    content <- html_squish(content)
+  }
+
+  content <- content %>%
+    # Remove <!DOCTYPE> tag.
+    str_replace("[:space:]*<!DOCTYPE html[^>]*>[:space:]*", "") %>%
+    # Remove <meta> tag (a "Content-Type" <meta> inserted by {xml2}).
+    str_replace("<meta[^>]*>", "")
+
   # Replace bare line-feeds.
-  content <- drape_linefeed(as.character(content))
+  content <- drape_linefeed(content)
 
   structure(
     c(
@@ -375,8 +418,7 @@ other <- function(
   ...
 ) {
   charset <- NA
-  basename <- basename(filename)
-  name <- ifelse(is.na(name), basename, name)
+  if (is.na(name)) name <- basename(filename)
 
   if (!is.na(type)) {
     # Could use mime::mimemap to map from specific extensions to MIME types,
@@ -387,7 +429,7 @@ other <- function(
   } else {
     type <- guess_type(filename, empty = "application/octet-stream")
   }
-  type <- glue('{type}; name="{name}"')
+  type <- glue('{type}; name{parameter_value_encode(name)}')
 
   if (is.na(disposition)) {
     disposition <- ifelse(
@@ -424,24 +466,20 @@ other <- function(
 NULL
 
 #' @rdname add_children
+#' @export
 #' @noRd
 #'
-append <- function(x, child) {
-  UseMethod("append", x)
-}
-append.MIME <- function(x, child) {
+after.MIME <- function(x, child) {
   if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT)
   x$children <- c(x$children, list(child))
   x
 }
 
 #' @rdname add_children
+#' @export
 #' @noRd
 #'
-prepend <- function(x, child) {
-  UseMethod("prepend", x)
-}
-prepend.MIME <- function(x, child) {
+before.MIME <- function(x, child) {
   if (!is.mime(child)) stop(ERROR_NOT_MIME_OBJECT)
   x$children <- c(list(child), x$children)
   x
@@ -519,7 +557,7 @@ as.character.MIME <- function(x, ...) {
 #' @param x MIME object
 #' @param ... Further arguments passed to or from other methods.
 print.MIME <- function(x, ...) {
-  cat(as.character(x))
+  cat(as.character(x))                               # nocov
 }
 
 # LENGTH ----------------------------------------------------------------------
@@ -532,6 +570,7 @@ print.MIME <- function(x, ...) {
 #' This is especially important for when we have a message that only consists
 #' of one MIME item. In that case we don't want it rendered as multipart/mixed.
 #'
+#' @export
 #' @noRd
 #'
 #' @param x A MIME object.

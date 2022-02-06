@@ -18,12 +18,14 @@ cc_addr <- "jane@example.com"
 bcc_addr <- "rex@example.com"
 
 msg <- envelope(
+  from = from_addr,
   to = to_addr,
   cc = cc_addr,
   bcc = bcc_addr,
   subject = SUBJECT,
   html = HTMLCONTENT
-)
+) %>%
+  attachment(JPGPATH)
 msg_outlook <- outlook$create_email(msg)
 
 test_that("body is correct", {

@@ -1,11 +1,12 @@
 suppressPackageStartupMessages({
   library(here)
-  library(logger)
   library(dplyr)
+  library(base64enc)
+  library(logger)
   require(htmltools, quietly = TRUE)
 })
 
-log_threshold(ERROR)
+log_threshold(FATAL)
 
 # Generate random folder name.
 #
@@ -17,6 +18,13 @@ TXTPATH <- tempfile(fileext = ".txt")
 CSSPATH <- tempfile(fileext = ".css")
 HTMLPATH <- "hello.html"
 RMD_TEMPLATE <- "vignette.Rmd"
+
+TEMPLATE_HTML <- "letter-html"
+TEMPLATE_TEXT <- "letter-text"
+TEMPLATE_BOTH <- "letter-both"
+TEMPLATE_NONE <- "letter-none"
+
+IMG_URL <- "https://cran.r-project.org/Rlogo.svg"
 
 # This file comes from https://bit.ly/2P4LUO8 (cat poster on WikiPedia).
 #
@@ -31,9 +39,12 @@ PLAIN_MARKDOWN_INTERPOLATE <- "Hi {{name}}!"
 
 COLOUR_GLAUCOUS = "#6082b6"
 
+ACCENTED_NAME <- "señor-gonzález.csv"
+ACCENTED_PATH <- file.path(tempdir(), ACCENTED_NAME)
+
 # Start with a blank slate.
 #
-source("teardown-files.R", local = TRUE)
+source("teardown.R", local = TRUE)
 
 # The , sep = "" prevents it from writing an "\n" at the end of the line.
 writeLines(TXTCONTENT, TXTPATH, sep = "")
@@ -49,6 +60,8 @@ HTMLCONTENT <- "<p>Hello there, stranger!</p>"
 writeLines(HTMLCONTENT, HTMLPATH)
 
 SUBJECT <- rndchar(36)
+
+file.create(ACCENTED_PATH)
 
 # SERVER -----------------------------------------------------------------------
 
@@ -115,6 +128,25 @@ smtp_mailersend <- mailersend(
   username = SMTP_USERNAME_MAILERSEND,
   password = SMTP_PASSWORD_MAILERSEND
 )
+
+smtp_smtpbucket <- smtpbucket(
+)
+
+# TEMPLATE ---------------------------------------------------------------------
+
+TEMPLATE_HTML_CONTENT <- "<p>Hello {{ name }}!</p>"
+TEMPLATE_TEXT_CONTENT <- "Hello {{ name }}!"
+
+for (dir in c(TEMPLATE_HTML, TEMPLATE_TEXT, TEMPLATE_BOTH, TEMPLATE_NONE)) {
+  dir.create(dir)
+}
+
+for (dir in c(TEMPLATE_HTML, TEMPLATE_BOTH)) {
+  writeLines(TEMPLATE_HTML_CONTENT, file.path(dir, "template.html"))
+}
+for (dir in c(TEMPLATE_TEXT, TEMPLATE_BOTH)) {
+  writeLines(TEMPLATE_TEXT_CONTENT, file.path(dir, "template.txt"))
+}
 
 # R MARKDOWN FILE --------------------------------------------------------------
 

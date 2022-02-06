@@ -57,6 +57,30 @@ test_that("html: tagList & vec of html are cast to character", {
   )
 })
 
+test_that("html: Text not HTML", {
+  expect_error(envelope %>% html(TXTCONTENT))
+})
+
+test_that("html: <img> without src", {
+  expect_error(envelope %>% html("<img>"))
+})
+
+test_that("html: <img> from URL", {
+  msg <- envelope() %>% html(glue('<img src="{IMG_URL}">'))
+  expect_match(as.character(msg), '<img src="cid:[0-9a-z]{8}">')
+})
+
+test_that("html: <img> from file", {
+  msg <- envelope() %>% html(glue('<img src="{JPGPATH}">'))
+  expect_match(as.character(msg), '<img src="cid:[0-9a-z]{8}">')
+})
+
+test_that("html: <img> with Base64 encoded content", {
+  img_uri <- dataURI(file = JPGPATH, mime = "image/jpg")
+  msg <- envelope() %>% html(glue('<img src="{img_uri}">'))
+  expect_match(as.character(msg), '<img src="cid:[0-9a-z]{8}">')
+})
+
 test_that("html: HTML from file", {
   expect_true(
     grepl(
@@ -108,13 +132,41 @@ test_that("toggle visibility", {
   expect_invisible(envelope() %>% text("Hello!"))
 })
 
-test_that("html: inject CSS", {
+test_that("css: inject CSS", {
   expect_match(
     envelope() %>%
       html("<p>foo</p>", css_files = CSSPATH) %>%
       as.character(),
     COLOUR_GLAUCOUS
   )
+})
+
+test_that("css: multiple CSS sources", {
+  MSG = "<html>
+  <head>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+      b {color: green;}
+    </style>
+    <link rel='stylesheet' href='https://pro.fontawesome.com/releases/v5.10.0/css/all.css'/>
+  </head>
+  <body>
+    <p>Some test text.<b>BOLD!</b></p>
+  </body>
+</html>"
+
+  msg <- envelope() %>%
+    html(MSG, css_files = CSSPATH) %>%
+    as.character()
+
+  # CSS from file.
+  expect_match(msg, COLOUR_GLAUCOUS)
+  # CSS from <style>.
+  expect_match(msg, "b \\{color: green;\\}")
+  # CSS from <link>.
+  expect_match(msg, "Font Awesome")
+  # CSS from @import.
+  expect_match(msg, "font-family: 'Roboto';")
 })
 
 test_that("Content-Type header", {

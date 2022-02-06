@@ -98,18 +98,6 @@ drape_linefeed <- function(txt) {
   str_replace_all(txt, REGEX_BARE_LINEFEED, "\r\n")
 }
 
-#' Remove comments from CSS
-#'
-#' Will handle comments with the following form:
-#'
-#' - /* ... */
-#' - /*! ... */
-#'
-#' @noRd
-css_remove_comment <- function(css) {
-  str_replace_all(css, "/\\*!?(\\*(?!/)|[^\\*])*\\*/", "")
-}
-
 #' Remove gratuitous whitespace from HTML
 #'
 #' @param html HTML content as character vector.
@@ -225,4 +213,74 @@ smtp_url <- function(host, port, protocol = NA, helo = NA) {
 stop <- function(..., call. = FALSE, domain = NULL) {
   txt <- glue::glue(...)
   base::stop(txt, call. = call., domain = domain)
+}
+
+#' Encode parameter values for MIME headers
+#'
+#' Formats UTF-8 parameter values for the use in MIME headers. Non-ASCII
+#' characters, control characters, and some special characters have to be
+#' specially encoded according to the
+#' \href{https://tools.ietf.org/html/rfc2231}{RFC2231} specification.
+#'
+#' @noRd
+#'
+#' @param x \code{character(1)}. UTF-8 string to format.
+#' @return \code{character(1)}. String to put right after the parameter name in
+#'   a MIME header. The equal sign and possible quotation marks are included.
+#'   For example \code{"I'm not quoted.csv"} turns to
+#'   \code{"=\\"I'm not quoted.csv\\""} while \code{"\\"I'm quoted\\".csv"}
+#'   results in \code{"*=utf-8''\%22I'm\%20quoted\%22.csv"}.
+#' @examples
+#' parameter_value_encode("I'm not quoted.csv")
+#' parameter_value_encode("\"I'm quoted\".csv")
+parameter_value_encode <- function(x){
+  raw <- charToRaw(x)
+  ascii_to_encode <- as.raw(c(0x00:0x1F, 0x22, 0x5C, 0x7F))
+  # Control characters, "\"" and sometimes "\\" must also be encoded.
+  ascii <- raw <= as.raw(0x7F) & !(raw %in% ascii_to_encode)
+  if (all(ascii)) {
+    return(paste0("=\"", x, "\""))
+  } else {
+    syntax_ascii <- as.raw(c(0x20, 0x25, 0x3B))
+    # In case of encoding, " ", "%" and ";" must be encoded as well.
+    ascii <- ascii & !(raw %in% syntax_ascii)
+    encoded <- character(length(raw))
+    encoded[ascii] <- rawToChar(raw[ascii], multiple = TRUE)
+    encoded[!ascii] <- paste0("%", toupper(as.character(raw[!ascii])))
+    return(paste0("*=utf-8''", paste(encoded, collapse = "")))
+  }
+}
+
+file.ext <- function(path) {
+  sub(".*\\.", "", basename(path))
+}
+
+#' Transform a (tag)list to a character string
+#'
+#' @param content Element to transform.
+#'
+#' @return If the content is a list, a tagList or a tag,
+#'     a character vector. Otherwise, it will return the
+#'     input unchanged.
+#'
+#' @noRd
+#' @examples
+#' list_to_char(list("<b>Hello</b>", "<p>World!</p>"))
+#' library(htmltools)
+#' list_to_char(tagList(h2("Hello"), p("World!")))
+list_to_char <- function(content) {
+  if (
+    # We do the change if the element is a
+    # tag or a tag.list
+    inherits(content, "shiny.tag.list") |
+    inherits(content, "shiny.tag")
+  ) {
+    content <- as.character(content)
+  }
+  # Then if we have a list, we collapse it to
+  # a character vector
+  if (length(content) > 1) {
+    content <- paste(content, collapse = "\n")
+  }
+  content
 }

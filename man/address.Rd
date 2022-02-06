@@ -23,14 +23,8 @@ An \code{address} object, representing an email address.
 \description{
 Create an \code{address} object which represents an email address.
 }
-\details{
-Implemented as an \href{https://cran.r-project.org/package=vctrs/vignettes/s3-vector.html}{S3 vector class}.
-}
 \examples{
 address("gerry@gmail.com")
 address("gerry@gmail.com", "Gerald")
-address(
-  c("gerry@gmail.com", "alice@yahoo.com", "jim@aol.com"),
-  c("Gerald", "Alice", NA)
-)
+address("gerry@gmail.com", "Durrell, Gerald")
 }
