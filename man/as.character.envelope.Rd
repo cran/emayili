@@ -4,7 +4,7 @@
 \alias{as.character.envelope}
 \title{Create formatted message.}
 \usage{
-\method{as.character}{envelope}(x, ..., details = TRUE)
+\method{as.character}{envelope}(x, ..., details = TRUE, encode = FALSE)
 }
 \arguments{
 \item{x}{A message object.}
@@ -12,6 +12,8 @@
 \item{...}{Further arguments passed to or from other methods.}
 
 \item{details}{Whether or not to display full message content.}
+
+\item{encode}{Whether to encode headers.}
 }
 \value{
 A formatted message object.

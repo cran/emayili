@@ -12,7 +12,7 @@ status](https://github.com/datawookie/emayili/actions/workflows/build.yaml/badge
 [![Codecov test
 coverage](https://img.shields.io/codecov/c/github/datawookie/emayili.svg)](https://codecov.io/github/datawookie/emayili)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->
 
 `{emayili}` is a package for sending emails from R. The design goals
@@ -56,7 +56,7 @@ library(emayili)
 packageVersion("emayili")
 ```
 
-    [1] '0.7.5'
+    [1] '0.7.9'
 
 Create a message object.
 
@@ -147,8 +147,8 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:                         Sun, 06 Feb 2022 07:20:44 GMT
-    X-Mailer:                     {emayili}-0.7.5
+    Date:                         Sun, 03 Apr 2022 16:04:25 GMT
+    X-Mailer:                     {emayili}-0.7.9
     MIME-Version:                 1.0
     From:                         alice@yahoo.com
     To:                           bob@google.com
@@ -196,13 +196,12 @@ envelope() %>%
   text("Hello {{name}}!")
 ```
 
-    Date:                         Sun, 06 Feb 2022 07:20:45 GMT
-    X-Mailer:                     {emayili}-0.7.5
+    Date:                         Sun, 03 Apr 2022 16:04:25 GMT
+    X-Mailer:                     {emayili}-0.7.9
     MIME-Version:                 1.0
     Content-Type:                 text/plain; 
                                   charset=utf-8; 
                                   format=flowed
-    Content-Disposition:          inline
     Content-Transfer-Encoding:    7bit
     Content-MD5:                  nhjeY5ZYMzru+kSCGUzNKg==
 
@@ -222,12 +221,11 @@ envelope() %>%
   )
 ```
 
-    Date:                         Sun, 06 Feb 2022 07:20:45 GMT
-    X-Mailer:                     {emayili}-0.7.5
+    Date:                         Sun, 03 Apr 2022 16:04:25 GMT
+    X-Mailer:                     {emayili}-0.7.9
     MIME-Version:                 1.0
     Content-Type:                 text/html; 
                                   charset=utf-8
-    Content-Disposition:          inline
 
     <html><body><p>Check out <a href="https://cran.r-project.org/package=emayili"><code>{emayili}</code></a>.</p></body></html>
 
@@ -390,7 +388,7 @@ for Gmail, SendGrid & Mailgun</a>
 </tr>
 <tr>
 <td>
-<img src="https://datawookie.dev/blog/2021/10/emayili-message-precedence/featured.png" width="100px">
+<img src="https://datawookie.dev/blog/2021/10/emayili-message-precedence/featured.jpg" width="100px">
 </td>
 <td>
 <a href="https://datawookie.dev/blog/2021/10/emayili-message-precedence/">Message
@@ -399,7 +397,7 @@ Precedence</a>
 </tr>
 <tr>
 <td>
-<img src="https://datawookie.dev/blog/2021/10/emayili-message-integrity/featured.png" width="100px">
+<img src="https://datawookie.dev/blog/2021/10/emayili-message-integrity/featured.jpg" width="100px">
 </td>
 <td>
 <a href="https://datawookie.dev/blog/2021/10/emayili-message-integrity/">Message

@@ -21,17 +21,20 @@ render(
 \arguments{
 \item{msg}{A message object.}
 
-\item{input}{The input Markdown file to be rendered or a character vector of Markdown text.}
+\item{input}{The input Markdown file to be rendered or a character vector of
+Markdown text.}
 
-\item{params}{A list of named parameters that override custom parameters specified in the YAML front-matter.}
+\item{params}{A list of named parameters that override custom parameters
+specified in the YAML front-matter.}
 
 \item{squish}{Whether to clean up whitespace in rendered document.}
 
 \item{css_files}{Extra CSS files.}
 
-\item{include_css}{Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS).}
+\item{include_css}{Whether to include rendered CSS from various sources
+(\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS).}
 
-\item{language}{Langauge of content. If \code{FALSE} then will not include
+\item{language}{Language of content. If \code{FALSE} then will not include
 language field. If \code{TRUE} then will attempt to auto-detect language.
 Otherwise will use the specified language.}
 
@@ -66,6 +69,13 @@ R Markdown is processed with \code{\link[rmarkdown:render]{rmarkdown::render()}}
 
 Regardless of what \code{output} type is specified in the input file,
 \code{render()} will always use the \code{"html_document"} output format.
+
+Rending an R Markdown document can result in a lot of CSS. When all of the
+CSS is included in the HTML \verb{<head>} and sent to GMail it can result in a
+message which is not correctly displayed inline in the Gmail web client.
+To get around this you can specify \code{include_css = FALSE}. This will mean
+that some styling will not be present in the resulting message, but that
+the message content will be correctly rendered inline.
 }
 
 \examples{

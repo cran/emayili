@@ -33,14 +33,14 @@ as.character.header <- function(x, width = 30, ...) {
         paste0(x$name, ":")
     ),
     paste(
-      as.character(x$values),
+      as.character(x$values, ...),
       collapse = paste0(x$sep, CRLF, INDENT)
     )
   )
 }
 # as.character.header(msg$headers$To) %>% cat()
 
-print.header <- function(x, ... ) {
+print.header <- function(x, ...) {
   print(as.character(x))
 }
 

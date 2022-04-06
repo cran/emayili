@@ -1,8 +1,8 @@
-ERROR_NOT_MIME_OBJECT <- "Child is not a MIME object."
+ERROR_NOT_MIME_OBJECT <- "Child is not a MIME object."              # nolint
 
 # CONSTRUCTOR -----------------------------------------------------------------
 
-is.mime <- function(x) {
+is.mime <- function(x) {                                            # nolint
   "MIME" %in% class(x)
 }
 
@@ -22,7 +22,7 @@ is.mime <- function(x) {
 #' @param encoding How content is transformed to ASCII. Options are
 #'   \code{"7bit"}, \code{"quoted-printable"} and \code{"base64"}. Use \code{NA}
 #'   or \code{NULL} for no (or "identity") encoding.
-#' @param language Langauge of content. If \code{FALSE} then will not include
+#' @param language Language of content. If \code{FALSE} then will not include
 #'   language field. If \code{TRUE} then will attempt to auto-detect language.
 #'   Otherwise will use the specified language.
 #' @param description Description of content.
@@ -53,16 +53,25 @@ NULL
 #' There are a number of options for multipart messages:
 #'
 #' \itemize{
-#'  \item{\code{multipart/mixed} — }{Used for sending content with multiple independent parts either inline or as attachments. Each part can have different \code{Content-Type}.}
-#'  \item{\code{multipart/alternative} — }{Used when each part of the message is an "alternative" version of the same content. The order of the parts is important: preferred and/or more complex formats should be found towards the end.
+#'  \item{\code{multipart/mixed} — }{Used for sending content with multiple
+#'    independent parts either inline or as attachments. Each part can have
+#'    different \code{Content-Type}.}
+#'  \item{\code{multipart/alternative} — }{Used when each part of the message
+#'    is an "alternative" version of the same content. The order of the parts
+#'    is important: preferred and/or more complex formats should be found
+#'    towards the end.
 #'
 #'  \emph{Example:} A message with both plain text and HTML versions.}
-#'  \item{\code{multipart/digest} — }{Used to send multiple plain text messages.}
-#'  \item{\code{multipart/related} — }{Used when each part of the the message represents a component of the complete message.
+#'  \item{\code{multipart/digest} — }{Used to send multiple plain text
+#'    messages.}
+#'  \item{\code{multipart/related} — }{Used when each part of the the message
+#'    represents a component of the complete message.
 #'
 #'  \emph{Example:} A web page with images.}
-#'  \item{\code{multipart/signed} — }{Used when a message has a digital signature attached.}
-#'  \item{\code{multipart/encrypted} — }{Used for a message with encrypted content.}
+#'  \item{\code{multipart/signed} — }{Used when a message has a digital
+#'    signature attached.}
+#'  \item{\code{multipart/encrypted} — }{Used for a message with encrypted
+#'    content.}
 #' }
 #'
 #' A nice illustration of how some of these relate can be found at \url{https://stackoverflow.com/a/40420648/633961}.
@@ -176,13 +185,13 @@ multipart_signed <- function(
   micalg = "pgp-sha256",
   ...
 ) {
-  if (!(micalg %in% LEVELS_MICALG)) stop('Invalid micalg: "{micalg}".')
+  if (!(micalg %in% LEVELS_MICALG)) stop("Invalid micalg.")
   structure(
     c(
       MIME(
         "This is an OpenPGP/MIME signed message (RFC 4880 and 3156).",
         protocol = "application/pgp-signature",
-        type = c("multipart/signed", 'micalg="{micalg}"'),
+        type = c("multipart/signed", glue('micalg="{micalg}"')),
         ...
       ),
       list()
@@ -344,6 +353,9 @@ text_html <- function(
       css_remove_comment() %>%
       str_squish()
 
+    # Remove web fonts.
+    css <- gsub("@font-face\\{[^}]*\\}", "", css)
+
     # Add <head> (can be missing if rendering Plain Markdown).
     if (is.na(xml_find_first(content, "//head"))) {
       log_debug("- Add <head>.")
@@ -382,6 +394,11 @@ text_html <- function(
 
   # Replace bare line-feeds.
   content <- drape_linefeed(content)
+
+  # Remove empty lines.
+  content <- str_replace_all(content, "(\\r\\n)+", "\r\n")
+  # Remove line-feed at end.
+  content <- str_replace(content, "(\\r\\n)+$", "")
 
   structure(
     c(
@@ -429,7 +446,6 @@ other <- function(
   } else {
     type <- guess_type(filename, empty = "application/octet-stream")
   }
-  type <- glue('{type}; name{parameter_value_encode(name)}')
 
   if (is.na(disposition)) {
     disposition <- ifelse(
@@ -513,7 +529,7 @@ as.character.MIME <- function(x, ...) {
   })
   #
   headers <- list(
-    content_type(type(x), x$protocol, x$charset, x$boundary, x$format, x$name),
+    content_type(type(x), x$protocol, x$charset, x$boundary, x$format, x$filename),
     content_description(x$description),
     content_disposition(x$disposition, x$filename),
     content_transfer_encoding(x$encoding),
@@ -540,9 +556,9 @@ as.character.MIME <- function(x, ...) {
     # Content (if any).
     content,
     # Children (if any).
-    if(length(children)) children else NULL,
+    if (length(children)) children else NULL,
     # Foot.
-    if (!is.na(x$boundary)) glue('--{x$boundary}--') else NULL
+    if (!is.na(x$boundary)) glue("--{x$boundary}--") else NULL
   )
 
   paste(body, collapse = "\r\n")

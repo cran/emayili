@@ -4,13 +4,15 @@
 \alias{format.address}
 \title{Encode email addresses in a common format}
 \usage{
-\method{format}{address}(x, quote = TRUE, ...)
+\method{format}{address}(x, quote = TRUE, encode = FALSE, ...)
 }
 \arguments{
 \item{x}{An \code{address} object.}
 
 \item{quote}{Whether to quote display name (only relevant if display name is
 given in "Last, First" format).}
+
+\item{encode}{Whether to encode headers.}
 
 \item{...}{Further arguments passed to or from other methods.}
 }

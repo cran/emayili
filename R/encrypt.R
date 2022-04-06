@@ -1,8 +1,21 @@
 #' Encrypt or sign a message
 #'
-#' Specify whether the message should be encrypted, signed or have a public key attached.
+#' Specify whether the message should be encrypted, signed or have a public key
+#' attached.
 #'
-#' If a recipient's email client is unable to decrypt an encrypted message then they will not be able to access the message contents.
+#' The `signature()` function will add a digital signature to a message. It will
+#' also optionally include a copy of the sender's public key.
+#'
+#' The `encrypt()` function will encrypt the contents of a message using the
+#' public key(s) of the recipient(s). It can also add a digital signature to the
+#' message (this is the default behaviour) and include a copy of the sender's
+#' public key. Signing happens _before_ encryption, so the digital signature
+#' will only be accessible once the message has been decrypted. If a recipient
+#' no longer has access to their private key or their email client is unable to
+#' decrypt the message then they will not be able to access the message
+#'  contents.
+#'
+#' @name encrypt
 #'
 #' @inheritParams envelope
 #' @inheritParams parties
@@ -13,11 +26,18 @@
 #' @examples
 #' \dontrun{
 #' msg <- envelope(
+#'   from = "flotilla@kriegsmarine.gov",
 #'   to = "schunk@u-boat.com",
 #'   subject = "Top Secret Message",
 #'   text = "Immediate readiness. There are indications that the invasion has begun."
 #' )
+#' # Encrypt and sign the message.
 #' msg %>% encrypt()
+#' # Only encrypt the message.
+#' msg %>% encrypt(sign = FALSE)
+#' # Only sign the message.
+#' msg %>% signature()
+#' msg %>% encrypt(encrypt = FALSE)
 #' }
 encrypt <- function(msg, encrypt = TRUE, sign = TRUE, public_key = TRUE) {
   encrypt <- ifelse(is.null(encrypt), FALSE, encrypt)           # nocov start
@@ -31,6 +51,15 @@ encrypt <- function(msg, encrypt = TRUE, sign = TRUE, public_key = TRUE) {
   if (get_option_invisible()) invisible(msg) else msg # nocov
 }
 
+#' @rdname encrypt
+#'
+#' @inheritParams encrypt
+#'
+#' @export
+signature <- function(msg, public_key = TRUE) {
+  encrypt(msg, sign = TRUE, encrypt = FALSE, public_key = public_key)
+}
+
 encrypt_body <- function(content, parties, encrypt, sign, public_key) {
   encrypt <- ifelse(is.null(encrypt), FALSE, encrypt)
   sign <- ifelse(is.null(sign), FALSE, sign)
@@ -40,7 +69,7 @@ encrypt_body <- function(content, parties, encrypt, sign, public_key) {
   if ((encrypt || sign) && is.null(content) && !public_key) stop("Can't sign or encrypt an empty message!")
 
   if (encrypt || sign || public_key) {
-    if(!requireNamespace("gpg", quietly = TRUE)) {
+    if (!requireNamespace("gpg", quietly = TRUE)) {
       stop("Install {gpg} to encrypt and/or sign messages.")    # nocov
     }
     log_debug("Encrypt message: {encrypt}")
@@ -72,7 +101,22 @@ encrypt_body <- function(content, parties, encrypt, sign, public_key) {
     # Get the fingerprints of the senders' keys.
     #
     sender_fingerprint <- keys %>%
-      inner_join(sender, by = "email") %>%
+      inner_join(sender, by = "email")
+
+    if (nrow(sender_fingerprint) > 1) {
+      log_warn("There are multiple keys for sender.")
+    }
+
+    if (nrow(sender_fingerprint) > 1) {
+      log_warn("Selecting most recent key.")
+
+      sender_fingerprint <- sender_fingerprint %>%
+        # Timestamp reflects when key was created not when added to keychain.
+        arrange(desc(timestamp)) %>%
+        slice(1)
+    }
+
+    sender_fingerprint <- sender_fingerprint %>%
       pull(fingerprint)
 
     # Get the fingerprints of the recipients' keys.
@@ -80,6 +124,8 @@ encrypt_body <- function(content, parties, encrypt, sign, public_key) {
     recipients_fingerprint <- keys %>%
       inner_join(recipients, by = "email") %>%
       pull(fingerprint)
+
+    log_debug("Found fingerprints for {length(recipients_fingerprint)} recipient(s).")
 
     TMPFILE <- tempfile()
 

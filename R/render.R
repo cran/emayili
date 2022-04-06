@@ -48,7 +48,7 @@ manifest <- function(
               alt = alt,
               width = width
             ),
-            if(is.null(caption)) NULL else tags$figcaption(caption),
+            if (is.null(caption)) NULL else tags$figcaption(caption),
             class = class
           )
         )
@@ -127,13 +127,23 @@ if (requireNamespace("memoise", quietly = TRUE)) {
 #' Regardless of what \code{output} type is specified in the input file,
 #' \code{render()} will always use the \code{"html_document"} output format.
 #'
+#' Rending an R Markdown document can result in a lot of CSS. When all of the
+#' CSS is included in the HTML `<head>` and sent to GMail it can result in a
+#' message which is not correctly displayed inline in the Gmail web client.
+#' To get around this you can specify `include_css = FALSE`. This will mean
+#' that some styling will not be present in the resulting message, but that
+#'the message content will be correctly rendered inline.
+#'
 #' @inheritParams text
 #' @inheritParams html
 #' @param msg A message object.
-#' @param input The input Markdown file to be rendered or a character vector of Markdown text.
-#' @param params A list of named parameters that override custom parameters specified in the YAML front-matter.
+#' @param input The input Markdown file to be rendered or a character vector of
+#'   Markdown text.
+#' @param params A list of named parameters that override custom parameters
+#'   specified in the YAML front-matter.
 #' @param squish Whether to clean up whitespace in rendered document.
-#' @param include_css Whether to include rendered CSS from various sources (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS).
+#' @param include_css Whether to include rendered CSS from various sources
+#'   (\code{"rmd"} — native R Markdown CSS; \code{"bootstrap"} — Bootstrap CSS).
 #'
 #' @return A message object.
 #' @seealso \code{\link{text}}, \code{\link{html}}
@@ -205,7 +215,7 @@ render <- function(
   stopifnot(!length(css_files) || is.character(css_files))
 
   # What are permissible options for include_css?
-  INCLUDE_CSS_OPTIONS <- eval(formals(render)$include_css)
+  INCLUDE_CSS_OPTIONS <- eval(formals(render)$include_css)          # nolint
 
   # Translate Boolean include_css:
   #
@@ -213,7 +223,7 @@ render <- function(
   # FALSE - no CSS
   #
   if (is.logical(include_css) && length(include_css) == 1) {
-    include_css <- if(include_css) INCLUDE_CSS_OPTIONS else NULL
+    include_css <- if (include_css) INCLUDE_CSS_OPTIONS else NULL
   }
 
   # Check for include_css options that are not available.
@@ -225,8 +235,8 @@ render <- function(
     )
   }
 
-  if (is.null(.envir)) .envir = parent.frame()
-  else .envir = list2env(.envir) # nocov
+  if (is.null(.envir)) .envir <- parent.frame()
+  else .envir <- list2env(.envir) # nocov
 
   if (is_filepath(input)) {
     log_debug("Interpreting input as path to file.")

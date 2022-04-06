@@ -4,7 +4,14 @@
 \alias{address}
 \title{Email Address}
 \usage{
-address(email = NA, display = NA, local = NA, domain = NA, normalise = TRUE)
+address(
+  email = NA,
+  display = NA,
+  local = NA,
+  domain = NA,
+  normalise = TRUE,
+  validate = FALSE
+)
 }
 \arguments{
 \item{email}{Email address.}
@@ -16,6 +23,8 @@ address(email = NA, display = NA, local = NA, domain = NA, normalise = TRUE)
 \item{domain}{Domain part of email address.}
 
 \item{normalise}{Whether to try to normalise address to RFC-5321 requirements.}
+
+\item{validate}{Whether to validate the address.}
 }
 \value{
 An \code{address} object, representing an email address.
@@ -26,5 +35,9 @@ Create an \code{address} object which represents an email address.
 \examples{
 address("gerry@gmail.com")
 address("gerry@gmail.com", "Gerald")
+address("gerry@gmail.com", "Gerald Durrell")
+# Display name in "Last, First" format.
 address("gerry@gmail.com", "Durrell, Gerald")
+# Display name contains non-ASCII characters.
+address("hans@gmail.com", "Hansjörg Müller")
 }

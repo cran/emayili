@@ -1,4 +1,4 @@
-`%|>%` <- magrittr::pipe_nested
+`%|>%` <- magrittr::pipe_nested                                     # nolint
 
 #' Add message body from template
 #'
@@ -43,10 +43,14 @@
 #' envelope() %>%
 #'   template("./templates/custom-template")
 #' }
-template <- function (msg, .name, ..., .envir = parent.frame()) {
-  if(!requireNamespace("jinjar", quietly = TRUE)) {
-    stop("Install {jinjar} to to use templates.")    # nocov
+template <- function(msg, .name, ..., .envir = parent.frame()) {
+  if (!requireNamespace("jinjar", quietly = TRUE)) {
+    stop("Install {jinjar} to to use templates.")                   # nocov
   }
+
+  JINJAR_CONFIG <- jinjar::jinjar_config(                           # nolint
+    lstrip_blocks = FALSE
+  )
 
   # Convert environment to list.
   params <- as.list(.envir)
@@ -75,16 +79,16 @@ template <- function (msg, .name, ..., .envir = parent.frame()) {
   if (file.exists(path_html)) {
     template_html <- read_text(path_html)
     log_debug("Found HTML template. Populating...")
-    template_html <- jinjar::render(template_html, !!!params)
+    template_html <- jinjar::render(template_html, !!!params, .config = JINJAR_CONFIG)
     log_debug("Done.")
   } else {
-    template_html <- NULL                            # nocov
-    log_debug("Unable to find HTML template.")       # nocov
+    template_html <- NULL                                       # nocov
+    log_debug("Unable to find HTML template.")                  # nocov
   }
   if (file.exists(path_text)) {
     template_text <- read_text(path_text)
     log_debug("Found text template. Populating...")
-    template_text <- jinjar::render(template_text, !!!params)
+    template_text <- jinjar::render(template_text, !!!params, .config = JINJAR_CONFIG)
     log_debug("Done.")
   } else {
     template_text <- NULL
@@ -110,5 +114,5 @@ template <- function (msg, .name, ..., .envir = parent.frame()) {
     }
   }
 
-  if (get_option_invisible()) invisible(msg) else msg # nocov
+  if (get_option_invisible()) invisible(msg) else msg           # nocov
 }

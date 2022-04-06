@@ -1,13 +1,82 @@
-sanitise <- function(email, strip_comments = TRUE) {
-  email %>%
+#' Normalise email address
+#'
+#' Ensure that email address is in a standard format.
+#'
+#' Performs the following transformations:
+#'
+#' - lowercase the domain part
+#' - replace some Unicode characters with compatible equivalents. See
+#'   [Unicode equivalence](https://en.wikipedia.org/wiki/Unicode_equivalence).
+#'
+#' @param email An email address.
+#'
+#' @return An email address.
+#' @export
+#'
+#' @examples
+#' normalise("bob@GMAIL.COM")
+#' \dontshow{
+#' # This breaks creation of the PDF manual.
+#' normalise("bob@ｇｍａｉｌ.com")
+#' }
+normalise <- function(email) {
+  email <- email %>%
     str_trim() %>%
-    str_replace("[:blank:]+@[:blank:]+", "@") %>% {
-      if (strip_comments) {
-        str_remove_all(., "\\([^)]*\\)")
+    str_replace("[:blank:]+@[:blank:]+", "@")
+
+  # Strip comments.
+  email <- str_remove_all(email, "\\([^)]*\\)")
+
+  # Unicode NFC normalisation.
+  email <- stri_trans_nfkc(email)
+
+  # Domain part to lowercase.
+  #
+  # Need to use sub() here because {stringr} doesn't support perl option, which
+  # is required to get "\\L" (lowercase) working.
+  #
+  email <- sub("(?<=@)(.*)", "\\L\\1", email, perl = TRUE)
+
+  email
+}
+
+#' Validate email address
+#'
+#' @param addr An email address.
+#' @param deliverability Whether to check for deliverability (valid domain).
+#'
+#' @return A `logical` indicating whether or not the address is valid.
+#' @export
+#'
+#' @examples
+#' # A valid address.
+#' validate("cran-sysadmin@r-project.org")
+#' # An invalid address.
+#' validate("help@this-domain-does-not-exist.com")
+validate <- function(addr, deliverability = TRUE) {
+  if (!inherits(addr, "address")) addr <- as.address(addr)
+
+  addr <- addr$email
+  log_debug("Check address: {addr}")
+
+  log_debug("- syntax")
+  if (!compliant(addr)) {
+    log_warn("Email address doesn't satisfy syntax requirements.")
+    FALSE
+  } else {
+    if (deliverability) {
+      domain <- domain(addr)
+      log_debug("- domain:      {domain}")
+      if (is.null(safely(nslookup)(domain)$result)) {
+        log_warn("* Email address doesn't have a valid domain.")
+        FALSE
       } else {
-        . # nocov
+        TRUE
       }
+    } else {
+      TRUE
     }
+  }
 }
 
 #' Tests whether an email address is syntactically correct
@@ -37,7 +106,7 @@ compliant <- function(addr, error = FALSE) {
 
   # Test on whole email address.
   #
-  email <- grepl("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}", email, ignore.case=TRUE)
+  email <- grepl("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}", email, ignore.case = TRUE)
 
   # Test on local part.
   #
@@ -54,7 +123,7 @@ compliant <- function(addr, error = FALSE) {
       # Quoted.
       TRUE,
       # Unquoted.
-      !grepl('[[:blank:]]+.*', local)             # No spaces in local.
+      !grepl("[[:blank:]]+.*", local)             # No spaces in local.
     )
 
   # Test on domain.
@@ -82,6 +151,7 @@ compliant <- function(addr, error = FALSE) {
 #' @param local Local part of email address.
 #' @param domain Domain part of email address.
 #' @param normalise Whether to try to normalise address to RFC-5321 requirements.
+#' @param validate Whether to validate the address.
 #'
 #' @return An \code{address} object, representing an email address.
 #' @export
@@ -89,13 +159,18 @@ compliant <- function(addr, error = FALSE) {
 #' @examples
 #' address("gerry@gmail.com")
 #' address("gerry@gmail.com", "Gerald")
+#' address("gerry@gmail.com", "Gerald Durrell")
+#' # Display name in "Last, First" format.
 #' address("gerry@gmail.com", "Durrell, Gerald")
+#' # Display name contains non-ASCII characters.
+#' address("hans@gmail.com", "Hansjörg Müller")
 address <- function(
   email = NA,
   display = NA,
   local = NA,
   domain = NA,
-  normalise = TRUE
+  normalise = TRUE,
+  validate = FALSE
 ) {
   if (any(is.na(email) & is.na(local) & is.na(domain))) {
     stop("Either email or local and domain must be specified.", call. = FALSE)
@@ -115,23 +190,15 @@ address <- function(
   local <- as.character(local)
   domain <- as.character(domain)
 
-  args <- possibly(data.frame, NULL)(
-    email,
-    display,
-    local,
-    domain
-  )
-  if (is.null(args)) stop("Unable to recycle arguments in a meaningful way.")
-
-  args <- args %>% mutate(
-    email = ifelse(is.na(email), paste0(local, "@", domain), email)
-  )
-
-  email = ifelse(is.na(email), paste0(local, "@", domain), email)
+  email <- ifelse(is.na(email), paste0(local, "@", domain), email)
 
   if (normalise) {
-    email = sanitise(email)
-    display = str_squish(display)
+    email <- normalise(email)
+    display <- str_squish(display)
+  }
+
+  if (validate) {
+    if (!validate(email)) stop("Email address is not valid!")
   }
 
   structure(
@@ -158,21 +225,16 @@ length.address <- function(x) {
 #' @param x An \code{address} object.
 #' @param quote Whether to quote display name (only relevant if display name is
 #'   given in "Last, First" format).
+#' @param encode Whether to encode headers.
 #' @param ... Further arguments passed to or from other methods.
 #'
 #' @return A character vector.
 #' @export
-format.address <- function(x, quote = TRUE, ...) {
+format.address <- function(x, quote = TRUE, encode = FALSE, ...) {
   email <- x$email
   display <- x$display
 
-  # If the display name includes a comma, then quote it.
-  #
-  display <- ifelse(
-    !is.na(display) & str_detect(display, ",") & quote,
-    paste0('"', display, '"'),
-    display
-  )
+  display <- encodable(display) %>% as.character(encode = encode)
 
   fmt <- ifelse(is.na(display), email, glue("{display} <{email}>"))
   fmt[is.na(email)] <- NA
@@ -182,7 +244,7 @@ format.address <- function(x, quote = TRUE, ...) {
 
 #' Convert address object to character
 #'
-#' If display name is specifed as "Last, First" then the display name will be
+#' If display name is specified as "Last, First" then the display name will be
 #' quoted.
 #'
 #' @param x  An \code{address} object.
@@ -204,8 +266,7 @@ as.character.address <- function(x, ...) {
 #' @return A Boolean, \code{TRUE} if the \code{e1} address is the same as the
 #'   \code{e2} address (ignores the display name).
 #' @export
-Ops.address <- function(e1, e2)
-{
+Ops.address <- function(e1, e2) {
   if (!("address" %in% class(e1))) e1 <- as.address(e1)
   if (!("address" %in% class(e2))) e2 <- as.address(e2)
 
@@ -214,10 +275,8 @@ Ops.address <- function(e1, e2)
 
 #' Create an address object
 #'
-#' This is capable of handling more than one address at a time.
-#'
 #' @param addr An email address.
-#' @param split Pattern for splitting multiple addresses.
+#' @inheritParams address
 #'
 #' @return A list of \code{address} objects.
 #' @export
@@ -227,17 +286,11 @@ Ops.address <- function(e1, e2)
 #' as.address("Gerald <gerry@gmail.com>")
 #' as.address(c("Gerald <gerry@gmail.com>", "alice@yahoo.com", "jim@aol.com"))
 #' as.address("Gerald <gerry@gmail.com>, alice@yahoo.com, jim@aol.com")
-#' as.address("Durrell, Gerald <gerry@gmail.com>", FALSE)
-as.address <- function(addr, split = ", *") {
+#' as.address("Durrell, Gerald <gerry@gmail.com>")
+as.address <- function(addr, validate = FALSE) {                # nolint
   if ("address" %in% class(addr)) {
     addr
   } else {
-    # Check if multiple addresses.
-    #
-    if (is.character(split)) {
-      addr <- str_split(addr, split) %>% unlist()
-    }
-    #
     display <- ifelse(
       str_detect(addr, "[<>]"),
       str_extract(addr, ".*<") %>% str_remove("<"),
@@ -249,7 +302,7 @@ as.address <- function(addr, split = ", *") {
       addr
     )
 
-    address(email, display)
+    address(email, display, validate = validate)
   }
 }
 

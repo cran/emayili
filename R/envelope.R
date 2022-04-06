@@ -1,4 +1,4 @@
-is.envelope <- function(x) {
+is.envelope <- function(x) {                                        # nolint
   "envelope" %in% class(x)
 }
 
@@ -16,9 +16,10 @@ is.envelope <- function(x) {
 #' @param html See [html()].
 #' @param encrypt Whether to encrypt the message. If \code{TRUE} then the entire
 #'   message will be encrypted using the private key of the sender.
-#' @param sign Whether to sign the message. If \code{TRUE} then the entire message will be signed using the private key of the sender.
-#' @param public_key Whether to attach a public key. If \code{TRUE} then the public key of the sender will be attached.
-#' @inheritParams as.address
+#' @param sign Whether to sign the message. If \code{TRUE} then the entire
+#'   message will be signed using the private key of the sender.
+#' @param public_key Whether to attach a public key. If \code{TRUE} then the
+#'   public key of the sender will be attached.
 #'
 #' @return A message object.
 #' @seealso [subject()], [from()], [to()], [cc()], [bcc()], [reply()] and
@@ -55,8 +56,7 @@ envelope <- function(
   html = NULL,
   encrypt = FALSE,
   sign = FALSE,
-  public_key = FALSE,
-  split = ", *"
+  public_key = FALSE
 ) {
   koevert <- structure(
     list(
@@ -66,17 +66,17 @@ envelope <- function(
       public_key = public_key,
       parts = NULL
     ),
-    class="envelope"
+    class = "envelope"
   ) %>%
     header_set("Date", http_date(Sys.time()), append = FALSE) %>%
     header_set("X-Mailer", paste("{emayili}", packageVersion("emayili"), sep = "-"), append = FALSE) %>%
     header_set("MIME-Version", "1.0", append = FALSE)
 
-  if (!is.null(to)) koevert <- to(koevert, to, split = split)
-  if (!is.null(from)) koevert <- from(koevert, from, split = split)
-  if (!is.null(cc)) koevert <- cc(koevert, cc, split = split)
-  if (!is.null(bcc)) koevert <- bcc(koevert, bcc, split = split)
-  if (!is.null(reply)) koevert <- reply(koevert, reply, split = split)
+  if (!is.null(to)) koevert <- to(koevert, to)
+  if (!is.null(from)) koevert <- from(koevert, from)
+  if (!is.null(cc)) koevert <- cc(koevert, cc)
+  if (!is.null(bcc)) koevert <- bcc(koevert, bcc)
+  if (!is.null(reply)) koevert <- reply(koevert, reply)
   if (!is.null(subject)) koevert <- subject(koevert, subject)
   if (!is.null(importance)) koevert <- importance(koevert, importance)
   if (!is.null(priority)) koevert <- priority(koevert, priority)
@@ -86,8 +86,12 @@ envelope <- function(
   koevert
 }
 
-headers <- function(x) {
-  paste(sapply(x$headers, as.character), collapse = "\r\n")
+headers <- function(x, encode = FALSE) {
+  headers <- x$headers
+  # Drop the Bcc header.
+  headers <- headers[names(headers) != "Bcc"]
+
+  paste(map_chr(headers, as.character, encode = encode), collapse = "\r\n")
 }
 
 #' Print a message object
@@ -110,7 +114,7 @@ headers <- function(x) {
 #' print(msg)
 print.envelope <- function(x, details = NA, ...) {
   if (is.na(details)) {
-    details = get_option_details(default = FALSE)
+    details <- get_option_details(default = FALSE)
   }
   stopifnot(is.logical(details))
   #
@@ -122,12 +126,13 @@ print.envelope <- function(x, details = NA, ...) {
 #' Accepts a message object and formats it as a MIME document.
 #'
 #' @inheritParams print.envelope
+#' @param encode Whether to encode headers.
 #' @export
 #'
 #' @return A formatted message object.
-as.character.envelope <- function(x, ..., details = TRUE) {
+as.character.envelope <- function(x, ..., details = TRUE, encode = FALSE) {
   message <- list(
-    headers(x)
+    headers(x, encode = encode)
   )
 
   if (length(x$parts) > 1) {
@@ -155,8 +160,8 @@ as.character.envelope <- function(x, ..., details = TRUE) {
 #'
 #' @param x Message object
 #' @param child A child to be appended
-after.envelope <- function(x, child) {
-  if(is.null(x$parts)) {
+after.envelope <- function(x, child) {                              # nolint
+  if (is.null(x$parts)) {
     log_debug("Adding first child.")
     x$parts <- list(child)
   } else {
