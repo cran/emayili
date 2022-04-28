@@ -1,7 +1,7 @@
-a5455265f62d30919ebed3f5dd3ad9dc *DESCRIPTION
+eeaf64914ca29de8d0a2aedbdc00ce9a *DESCRIPTION
 1883fdbd3231f8f2dc2240e367d21a16 *NAMESPACE
-913145ccdaa6376ace8e75d0983aa4de *NEWS.md
-c88809bb05a147d9040001728519d5dd *R/address.R
+be6fb611565273a2ff7826aafd893f24 *NEWS.md
+1a5ffeb3039b8e6b29aa70b553eb5065 *R/address.R
 b26abf1ea4d3d67a93b2177aca3dab75 *R/attachment.R
 cb2146c28a61942152cd25e55d8989a8 *R/body.R
 78eadda63bc4640139a7e58428762747 *R/const.R
@@ -13,7 +13,7 @@ e3496e7b18728ac50d8d0db288f5b720 *R/encrypt.R
 882b4fe4b0ae5cbd39167ef43c82f11e *R/envelope.R
 2be5b09361435888409ee0f224acd74f *R/generics.R
 f6e44c584e6dddda27c9b171413fb364 *R/header-expires.R
-85ec1f2a4edd46c99b88a828e6bbe9dd *R/header-language.R
+149e572f1e7c9567c8e91875bcde4995 *R/header-language.R
 1d9b81e425562b36bf2026c2ca8789f3 *R/header-mail.R
 b5b592444574088686cf1b4a8a9c840d *R/header-mime.R
 d1a0868e6a3a4e0f39ceb6110557306f *R/header-precedence.R
@@ -65,7 +65,7 @@ c1572da53ed8df44c23577995e2d50ca *man/html.Rd
 0854d7ed1efdea83401b5c01971f251e *man/length.address.Rd
 c0b86388f87ba0e1e668de3b71f4eb71 *man/local.Rd
 596f80d468308458b3c08ae34b5bdafe *man/mime-parameters.Rd
-1eaa39e6fa15417f4832de441455fa76 *man/normalise.Rd
+74e73f6a50060ce7e13d66e5ce29dd8c *man/normalise.Rd
 2572ed5d1f600ea841d6af4a3bcb95ed *man/parties.Rd
 07097c63c93f20bbd4d0a537e6684dc4 *man/pipe.Rd
 d862f4c8dba21d0a1bb42a65c6db44ff *man/precedence.Rd
@@ -82,6 +82,6 @@ a9eb130407f517775df0efc57e157c75 *man/subject.Rd
 3fb9a64bec1c685ecb7d6123f5fa3aa5 *man/template.Rd
 fe2f365a7b973924131f4da469b86ed8 *man/text.Rd
 86b433dd45954b567fd10f55bff72184 *man/validate.Rd
-d5cbe2fc2320afc6e54be18f23a4300e *tools/check.R
+31af74948dba8a5c9e23b82f47e15e8c *tools/check.R
 29559943ae06e20f7f2770b7d705db68 *tools/coverage.R
 863114db451b9d9369d3cfe98dabf764 *tools/lint.R
