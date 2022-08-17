@@ -5,6 +5,7 @@
 #' @import logger
 #' @import purrr
 #' @import rvest
+#' @import stringi
 #' @import stringr
 #' @import tidyr
 #' @import xml2
@@ -22,8 +23,13 @@
 #' @importFrom xfun read_utf8
 NULL
 
-.onLoad <- function(libname, pkgname) {                             # nolint
-  log_layout(layout_glue_generator('{stringr::str_pad(level, 7, side = "right")} [{time}] {msg}')) # nocov
+.onLoad <- function(libname, pkgname) {
+  # nolint start
+  # nocov start
+  options(digits.secs = 3)
+  log_layout(layout_glue_generator('{stringr::str_pad(level, 7, side = "right")} [{time}] {msg}'))
+  # nocov end
+  # nolint end
 }
 
 globalVariables(
