@@ -8,6 +8,7 @@
 \alias{sendinblue}
 \alias{mailersend}
 \alias{mailfence}
+\alias{zeptomail}
 \alias{smtpbucket}
 \title{Create a SMTP server object.}
 \usage{
@@ -37,6 +38,8 @@ sendinblue(username, password, ...)
 mailersend(username, password, ...)
 
 mailfence(username, password, ...)
+
+zeptomail(password, ...)
 
 smtpbucket(...)
 }
@@ -133,6 +136,13 @@ content.
 To use Mailfence you'll need to create a premium account.
 }
 
+\section{ZeptoMail}{
+
+
+SMTP Bucket is a fake SMTP server that captures all the messages it receives
+and makes them available through a website or REST API.
+}
+
 \section{SMTP Bucket}{
 
 
@@ -176,8 +186,10 @@ smtp(msg, verbose = TRUE)
 
 # With explicit HELO domain.
 #
-smtp <- server(host = "mail.example.com",
-               helo = "client.example.com")
+smtp <- server(
+  host = "mail.example.com",
+  helo = "client.example.com"
+)
 
 # Set parameters for Gmail SMTP server. The host and port are implicit.
 smtp <- gmail(
@@ -213,6 +225,11 @@ smtp <- mailfence(
   username = "bob",
   password = "F!Uosd6xbhSjd\%63"
 )
+
+# Set password for ZeptoMail SMTP server.
+# nolint start
+smtp <- zeptomail("yA6KbHsL4l2mmI8Ns0/fs9iSTj8yG0dYBgfIG0j6Fsv4P2uV32xh8ciEYNYlRkgCC7wRfkgWA==")
+# nolint end
 
 # SMTP Bucket server.
 smtp <- smtpbucket()

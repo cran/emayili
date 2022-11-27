@@ -1,3 +1,11 @@
+# {emayili} 0.7.13
+
+* Add server support for ZeptoMail.
+
+# {emayili} 0.7.12
+
+* Add pre-commit hooks to enforce linting and style.
+
 # {emayili} 0.7.11
 
 * Improve handling of non-ASCII characters in markdown documents.
