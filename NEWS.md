@@ -1,3 +1,11 @@
+# {emayili} 0.7.17
+
+* Improve documentation of `server()`.
+
+# {emayili} 0.7.16
+
+* Add `use_ssl` argument to `server()`.
+
 # {emayili} 0.7.15
 
 * Consistent signatures for `before()` and `after()` generic functions.
