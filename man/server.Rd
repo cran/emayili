@@ -10,6 +10,7 @@
 \alias{mailfence}
 \alias{zeptomail}
 \alias{smtpbucket}
+\alias{mailtrap}
 \title{Create a SMTP server object.}
 \usage{
 server(
@@ -43,6 +44,8 @@ mailfence(username, password, ...)
 zeptomail(password, ...)
 
 smtpbucket(...)
+
+mailtrap(username, password, sandbox = FALSE, bulk = FALSE, ...)
 }
 \arguments{
 \item{host}{DNS name or IP address of the SMTP server.}
@@ -72,6 +75,10 @@ This enables SSL on non-standard ports.}
 \item{max_times}{Maximum number of times to retry.}
 
 \item{...}{Additional curl options. See \code{curl::curl_options()} for a list of supported options.}
+
+\item{sandbox}{Use email sandbox to test server.}
+
+\item{bulk}{Send bulk mail to multiple recipients.}
 }
 \value{
 A function which is used to send messages to the server.
@@ -173,6 +180,11 @@ and makes them available through a website or REST API.
 
 SMTP Bucket is a fake SMTP server that captures all the messages it receives
 and makes them available through a website or REST API.
+
+
+
+SMTP Bucket is a fake SMTP server that captures all the messages it receives
+and makes them available through a website or REST API.
 }
 
 \examples{
@@ -255,6 +267,9 @@ smtp <- mailfence(
 # nolint start
 smtp <- zeptomail("yA6KbHsL4l2mmI8Ns0/fs9iSTj8yG0dYBgfIG0j6Fsv4P2uV32xh8ciEYNYlRkgCC7wRfkgWA==")
 # nolint end
+
+# SMTP Bucket server.
+smtp <- smtpbucket()
 
 # SMTP Bucket server.
 smtp <- smtpbucket()

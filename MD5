@@ -1,5 +1,5 @@
-487a2be8e3b91360972fce2306cb8617 *DESCRIPTION
-3b5333d27fe6c481fdbdf5542ef186fd *NAMESPACE
+7b435622a2e4955869324328e4cd5941 *DESCRIPTION
+c546a9ef81e87ccaaa06d60703336104 *NAMESPACE
 e188cf7765d4b01e3ce0f7743c570a58 *NEWS.md
 5152cb2e9ce01ac1ac8f92d99a200a62 *R/address.R
 309fe70f605b534cf7132b86e546a5d0 *R/attachment.R
@@ -7,7 +7,7 @@ e188cf7765d4b01e3ce0f7743c570a58 *NEWS.md
 6c8754903b6f5606cb0ac7a1fe66c4a9 *R/const.R
 60cb22d4539f83ca178cdee9c91d0f79 *R/css.R
 e4bc1a1e8aacbe99321d3f37fbd75094 *R/emayili.R
-290507a1b2c8664f6217dab9cad3aa12 *R/encodable.R
+bcdf693daa96f37a53a403dd97acff77 *R/encodable.R
 d5ab75957f411310508b559026335497 *R/encoding.R
 47a949608296c9d1185be9ae6f45444a *R/encrypt.R
 228d3f3c38577d81690e9b3c105d6366 *R/envelope.R
@@ -19,12 +19,12 @@ b5b592444574088686cf1b4a8a9c840d *R/header-mime.R
 1de0daf892a7152f991e2db11d3d40b1 *R/header-precedence.R
 f542b177f611b90f57a77cb0634f8208 *R/header-receipt.R
 20e63031ff4318e3fc98c59356dde44b *R/header-sensitivity.R
-08e4ddf90d6f25ba175e30c16631ba7c *R/header.R
+b0a492f950f5929f1eb17a74b843552f *R/header.R
 e7e834dc2f0efbcd37c6a5f0954932b0 *R/mime.R
 0973fa57cb2eed2693a0f0cbcd20fb36 *R/options.R
 78c7c7405209698839c4d6ab64d09a09 *R/parties.R
 af5ec887a18bc5ed997eff592210ef8a *R/render.R
-7387cc4b23fb83a5b3ad14b75ec566fd *R/server.R
+0eb2d78f6441cf848684dc19e968a792 *R/server.R
 9a8c70d94ca165775ffbb2671a882941 *R/template.R
 5ad8f9e89b54d89b7b5aae19f6dec641 *R/utils.R
 13ddfe876d9192e1965898cfef1155c7 *README.md
@@ -34,7 +34,6 @@ d0a4e3d1b9e14560942b837b2e7bcd98 *inst/cats.jpg
 ccc848c512061f087440a4c1ddbd50d4 *inst/hex/emayili-hex.R
 8ce92391eec996d11268f623d45142e3 *inst/hex/envelope-regular.png
 2662ce9e3373cb0873542bef65bcd3cd *inst/shiny/send-message/app.R
-c97b4f79b49fc545847bc0a95f2c9e53 *inst/shiny/send-message/rsconnect/shinyapps.io/andrew-b-collier/send-message.dcf
 d43d10d3e5b019a34a0c53485545dfb1 *inst/template/newsletter/template.html
 8287d69d8a95e7db3c1197cc910d032d *inst/tiny-test-image.png
 cbf3c24fb86c2c1e9d7db9faf5512ccc *man/address.Rd
@@ -77,7 +76,7 @@ d39198e3734ea21736fe4b79b1a50038 *man/receipt.Rd
 6787ad1f0462a5e54672563f9dc4cae4 *man/render.Rd
 1459f60d23c483514c01e5786d51a3e1 *man/response.Rd
 304f0a5e546b8f8c0d8d82a84a3c71d2 *man/sensitivity.Rd
-5b8c6458711dec717f7b47cc4f54fb46 *man/server.Rd
+a7152ea2351548170a79a2d2a672610a *man/server.Rd
 7abeb5f36d31f1b47889f540d070d033 *man/subject.Rd
 3fb9a64bec1c685ecb7d6123f5fa3aa5 *man/template.Rd
 fe2f365a7b973924131f4da469b86ed8 *man/text.Rd
