@@ -178,9 +178,7 @@ format_datetime <- function(datetime) {
 #'
 #' @noRd
 wrap_angle_brackets <- function(x) {
-  if (!grepl("^<", x)) x <- paste0("<", x)
-  if (!grepl(">$", x)) x <- paste0(x, ">")
-  x
+  sub("(?<!>)$", ">", sub("^(?!<)", "<", x, perl = TRUE), perl = TRUE)
 }
 
 #' Test if list is nested or flat
@@ -253,4 +251,27 @@ list_to_char <- function(content) {
     content <- paste(content, collapse = "\n")
   }
   content
+}
+
+#' Create a message ID
+#'
+#' @param domain Originating domain.
+#'
+#' @return A message ID.
+#' @export
+#'
+#' @examples
+#' message_id()
+#' message_id("example.com")
+message_id <- function(domain = "mail.gmail.com") {
+  unique_id <- paste(
+    format(Sys.time(), "%Y%m%d%H%M%S"),
+    paste0(
+      sample(c(0:9, letters, LETTERS), 10, replace = TRUE),
+      collapse = ""
+    ),
+    sep = "-"
+  )
+
+  paste0(unique_id, "@", domain)
 }

@@ -249,7 +249,7 @@ gmail <- function(username,
 #'
 #' @section Sendgrid:
 #'
-#' To use SendGrid you'll need to first \href{https://docs.sendgrid.com/for-developers/sending-email/integrating-with-the-smtp-api}{create an API key}. # nolint
+#' To use SendGrid you'll need to first \href{https://www.twilio.com/docs/sendgrid/for-developers/sending-email/integrating-with-the-smtp-api}{create an API key}. # nolint
 #' Then use the API key as the password.
 #'
 #' SendGrid will accept messages on ports 25, 587 and 2525 (using SMTP) as well
@@ -397,8 +397,11 @@ mailfence <- function(username, password, ...) {
 #'
 #' @section ZeptoMail:
 #'
-#' SMTP Bucket is a fake SMTP server that captures all the messages it receives
-#' and makes them available through a website or REST API.
+#' Zeptomail is an email sending service provided by Zoho Corporation. It is
+#' designed primarily for transactional email delivery, which includes emails
+#' like password resets, order confirmations, notifications, and other
+#' automated, non-marketing communications that websites and applications need
+#' to send to their users.
 #'
 #' @export
 #'

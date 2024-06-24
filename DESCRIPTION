@@ -1,7 +1,7 @@
 Type: Package
 Package: emayili
 Title: Send Email Messages
-Version: 0.8.0
+Version: 0.9.1
 Authors@R: 
     c(person(given = c("Andrew", "B."),
              family = "Collier",
@@ -53,7 +53,7 @@ Encoding: UTF-8
 RoxygenNote: 7.3.1
 KeepSource: true
 NeedsCompilation: no
-Packaged: 2024-04-23 15:57:37 UTC; wookie
+Packaged: 2024-06-24 09:37:45 UTC; wookie
 Author: Andrew B. Collier [aut, cre, cph],
   Matt Dennis [ctb],
   Antoine Bichat [ctb] (<https://orcid.org/0000-0001-6599-7081>),
@@ -64,4 +64,4 @@ Author: Andrew B. Collier [aut, cre, cph],
   Colin Fay [ctb] (<https://orcid.org/0000-0001-7343-1846>)
 Maintainer: Andrew B. Collier <andrew.b.collier@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-04-23 16:30:02 UTC
+Date/Publication: 2024-06-24 10:00:02 UTC
