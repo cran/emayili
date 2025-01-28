@@ -26,6 +26,12 @@ The package name is an adaption of the Zulu word for email, *imeyili*.
 The documentation for `{emayili}` can be found
 [here](https://datawookie.github.io/emayili/).
 
+Not that I pretend to have many stars on this project, but these plots
+are quite fun.
+
+[![Star History
+Chart](https://api.star-history.com/svg?repos=datawookie/emayili&type=Date)](https://star-history.com/#datawookie/emayili&Date)
+
 ## Installation
 
 Get the stable version from
@@ -55,7 +61,7 @@ library(emayili)
 packageVersion("emayili")
 ```
 
-    [1] '0.7.17'
+    [1] '0.9.2'
 
 Create a message object.
 
@@ -146,8 +152,8 @@ Simply printing a message displays the header information.
 email
 ```
 
-    Date:                         Sat, 19 Aug 2023 04:44:05 GMT
-    X-Mailer:                     {emayili}-0.7.17
+    Date:                         Tue, 28 Jan 2025 10:03:49 GMT
+    X-Mailer:                     {emayili}-0.9.1
     MIME-Version:                 1.0
     From:                         alice@yahoo.com
     To:                           bob@google.com
@@ -195,8 +201,8 @@ envelope() %>%
   text("Hello {{name}}!")
 ```
 
-    Date:                         Sat, 19 Aug 2023 04:44:05 GMT
-    X-Mailer:                     {emayili}-0.7.17
+    Date:                         Tue, 28 Jan 2025 10:03:49 GMT
+    X-Mailer:                     {emayili}-0.9.1
     MIME-Version:                 1.0
     Content-Type:                 text/plain; 
                                   charset=utf-8; 
@@ -220,8 +226,8 @@ envelope() %>%
   )
 ```
 
-    Date:                         Sat, 19 Aug 2023 04:44:05 GMT
-    X-Mailer:                     {emayili}-0.7.17
+    Date:                         Tue, 28 Jan 2025 10:03:49 GMT
+    X-Mailer:                     {emayili}-0.9.1
     MIME-Version:                 1.0
     Content-Type:                 text/html; 
                                   charset=utf-8

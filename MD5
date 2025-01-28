@@ -1,4 +1,4 @@
-4490a00c0d1e9fd78602551c0084307a *DESCRIPTION
+73a6da9f7e5fca550691c0626195519d *DESCRIPTION
 e9482534aa9c3cc1164f481529fa63e1 *NAMESPACE
 e188cf7765d4b01e3ce0f7743c570a58 *NEWS.md
 5152cb2e9ce01ac1ac8f92d99a200a62 *R/address.R
@@ -6,15 +6,15 @@ e188cf7765d4b01e3ce0f7743c570a58 *NEWS.md
 3d55bf72f7e474477a5c03fcf95f7b78 *R/body.R
 6c8754903b6f5606cb0ac7a1fe66c4a9 *R/const.R
 60cb22d4539f83ca178cdee9c91d0f79 *R/css.R
-e4bc1a1e8aacbe99321d3f37fbd75094 *R/emayili.R
+ff3a477c1c27653b37e67da05c7ad99f *R/emayili.R
 bcdf693daa96f37a53a403dd97acff77 *R/encodable.R
 d5ab75957f411310508b559026335497 *R/encoding.R
 47a949608296c9d1185be9ae6f45444a *R/encrypt.R
-235efe46eb2713e5369f82b66b2206a8 *R/envelope.R
+5b004ce83a72220936d3961e4c12dce4 *R/envelope.R
 a9eeda0b64a5e672c795a8e2667bad6f *R/generics.R
 f6e44c584e6dddda27c9b171413fb364 *R/header-expires.R
 cd6dcf59803908c93acc7df3f3592f70 *R/header-language.R
-046d7bd1386cb654aff86cf219c35414 *R/header-mail.R
+b7d4b25b6353653d65aa887ac78470c1 *R/header-mail.R
 b5b592444574088686cf1b4a8a9c840d *R/header-mime.R
 1de0daf892a7152f991e2db11d3d40b1 *R/header-precedence.R
 f542b177f611b90f57a77cb0634f8208 *R/header-receipt.R
@@ -27,8 +27,8 @@ af5ec887a18bc5ed997eff592210ef8a *R/render.R
 1cf171dd50732dd5e62063f7e1ced4df *R/server.R
 9a8c70d94ca165775ffbb2671a882941 *R/template.R
 230df445eadf826f8be16f0e15c2aa38 *R/utils.R
-13ddfe876d9192e1965898cfef1155c7 *README.md
-32f41a3960b7169bea48d580e1a49750 *inst/WORDLIST
+cc63c56d595c458d9a50600bfbc985c7 *README.md
+4811f57962b5ecd587244eaf324e2f43 *inst/WORDLIST
 d0a4e3d1b9e14560942b837b2e7bcd98 *inst/cats.jpg
 0f3efe007ff68a56276d9118c67b9291 *inst/github-card.R
 ccc848c512061f087440a4c1ddbd50d4 *inst/hex/emayili-hex.R
@@ -60,7 +60,7 @@ e4beb641d2a678081dc33f215f9b932d *man/figures/emayili-github-card.png
 09e6522ed5ce2b6ed0892d259465daed *man/figures/screenshot-email-rendered.png
 3ca1263c4b64026389769d6cab242f5b *man/format.address.Rd
 c1572da53ed8df44c23577995e2d50ca *man/html.Rd
-bde247e7688d2f1671d56402a639e377 *man/id.Rd
+3b21c526f62c0cb5ed96eedae99ab6f9 *man/id.Rd
 128d33ca4acaa491e34d1e9531153cc0 *man/keywords.Rd
 0854d7ed1efdea83401b5c01971f251e *man/length.address.Rd
 c0b86388f87ba0e1e668de3b71f4eb71 *man/local.Rd
