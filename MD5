@@ -1,4 +1,4 @@
-73a6da9f7e5fca550691c0626195519d *DESCRIPTION
+89be0fd0973ad9e4d4011b1fd7494928 *DESCRIPTION
 e9482534aa9c3cc1164f481529fa63e1 *NAMESPACE
 e188cf7765d4b01e3ce0f7743c570a58 *NEWS.md
 5152cb2e9ce01ac1ac8f92d99a200a62 *R/address.R
@@ -10,7 +10,7 @@ ff3a477c1c27653b37e67da05c7ad99f *R/emayili.R
 bcdf693daa96f37a53a403dd97acff77 *R/encodable.R
 d5ab75957f411310508b559026335497 *R/encoding.R
 47a949608296c9d1185be9ae6f45444a *R/encrypt.R
-5b004ce83a72220936d3961e4c12dce4 *R/envelope.R
+1fda44149ebc55d057186c503f066cf2 *R/envelope.R
 a9eeda0b64a5e672c795a8e2667bad6f *R/generics.R
 f6e44c584e6dddda27c9b171413fb364 *R/header-expires.R
 cd6dcf59803908c93acc7df3f3592f70 *R/header-language.R
@@ -20,14 +20,14 @@ b5b592444574088686cf1b4a8a9c840d *R/header-mime.R
 f542b177f611b90f57a77cb0634f8208 *R/header-receipt.R
 20e63031ff4318e3fc98c59356dde44b *R/header-sensitivity.R
 b0a492f950f5929f1eb17a74b843552f *R/header.R
-e7e834dc2f0efbcd37c6a5f0954932b0 *R/mime.R
+00040cdf71af5440dda8495084a386d2 *R/mime.R
 0973fa57cb2eed2693a0f0cbcd20fb36 *R/options.R
 78c7c7405209698839c4d6ab64d09a09 *R/parties.R
 af5ec887a18bc5ed997eff592210ef8a *R/render.R
 1cf171dd50732dd5e62063f7e1ced4df *R/server.R
 9a8c70d94ca165775ffbb2671a882941 *R/template.R
 230df445eadf826f8be16f0e15c2aa38 *R/utils.R
-cc63c56d595c458d9a50600bfbc985c7 *README.md
+746211587f69c8cb73cf54023b92ed77 *README.md
 4811f57962b5ecd587244eaf324e2f43 *inst/WORDLIST
 d0a4e3d1b9e14560942b837b2e7bcd98 *inst/cats.jpg
 0f3efe007ff68a56276d9118c67b9291 *inst/github-card.R

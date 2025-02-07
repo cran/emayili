@@ -136,14 +136,34 @@ as.character.envelope <- function(x, ..., details = TRUE, encode = FALSE) {
     headers(x, encode = encode)
   )
 
-  if (length(x$parts) > 1) {
-    body <- multipart_alternative(children = x$parts)
+  # Extract HTML and/or text.
+  body <- discard(x$parts, ~ identical(.x$disposition, "attachment"))
+  # Extract attachments.
+  attachments <- keep(x$parts, ~ identical(.x$disposition, "attachment"))
+
+  if (length(body) > 0) {
+    if (length(body) > 1) {
+      # Both HTML and text.
+      body <- multipart_alternative(children = body)
+    } else {
+      # Either HTML or text (but not both).
+      body <- body[[1]]
+    }
   } else {
-    body <- x$parts[[1]]
+    body <- NULL
+  }
+
+  if (length(attachments) > 0) {
+    children <- c(list(body), attachments)
+    # Drop any NULL items.
+    children <- compact(children)
+    content <- multipart_mixed(children = children)
+  } else {
+    content <- body
   }
 
   body <- encrypt_body(
-    body,
+    content,
     parties(x),
     encrypt = x$encrypt,
     sign = x$sign,
